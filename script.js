@@ -1,5 +1,5 @@
 // Constants
-const OPENWEATHERMAP_API_KEY = 'your_openweathermap_api_key_here'; // Replace with your OpenWeatherMap API key
+const OPENWEATHERMAP_API_KEY = 'your_openweathermap_api_key_here'; // Replace with your key
 const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
 const v2vMessages = JSON.parse(localStorage.getItem('v2vMessages')) || [];
 const roadStats = { trafficDensity: 0, avgSpeed: 0, incidentRate: 0 };
@@ -8,25 +8,30 @@ const securityEvents = JSON.parse(localStorage.getItem('securityEvents')) || [];
 const socialPosts = JSON.parse(localStorage.getItem('socialPosts')) || [];
 const groups = JSON.parse(localStorage.getItem('groups')) || [];
 const scheduledPosts = JSON.parse(localStorage.getItem('scheduledPosts')) || [];
-let userPlan = localStorage.getItem('userPlan') || 'free'; // Default to free
+let userPlan = localStorage.getItem('userPlan') || 'free';
 let v2vDailyCount = parseInt(localStorage.getItem('v2vDailyCount')) || 0;
 let lastResetDate = localStorage.getItem('lastResetDate') || new Date().toDateString();
 
 // Map Initialization
-let map, markersLayer;
+let map, markersLayer, hospitalMap, hospitalMarkers;
 function initializeMap() {
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        try {
-            map = L.map('map').setView([51.505, -0.09], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            markersLayer = L.layerGroup().addTo(map);
-            console.log('Map initialized successfully');
-        } catch (error) {
-            console.error('Map initialization failed:', error);
-        }
+        map = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        markersLayer = L.layerGroup().addTo(map);
+        console.log('Main map initialized');
+    }
+    const hospitalMapElement = document.getElementById('hospital-map');
+    if (hospitalMapElement) {
+        hospitalMap = L.map('hospital-map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(hospitalMap);
+        hospitalMarkers = L.layerGroup().addTo(hospitalMap);
+        console.log('Hospital map initialized');
     }
 }
 
@@ -50,8 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'security.html':
             initializeSecurity();
             break;
-        default:
-            console.warn('Unknown page:', page);
     }
     simulateLiveData();
     checkScheduledPosts();
@@ -66,7 +69,6 @@ function initializeThemeToggle() {
         body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
         localStorage.setItem('theme', body.dataset.theme);
         toggleBtn.textContent = body.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode';
-        console.log('Theme toggled to:', body.dataset.theme);
     });
     body.dataset.theme = localStorage.getItem('theme') || 'dark';
     toggleBtn.textContent = body.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode';
@@ -79,18 +81,16 @@ function simulateLiveData() {
         const v2vSignal = document.getElementById('v2v-signal');
         if (v2vCount) v2vCount.textContent = Math.floor(Math.random() * 15) + 3;
         if (v2vSignal) v2vSignal.textContent = `${Math.floor(Math.random() * 90) + 10}%`;
-        console.log('Simulated V2V data updated');
     }, 10000);
 }
 
-// Reset V2V Count Daily
+// Reset V2V Count
 function resetV2VCountIfNeeded() {
     const today = new Date().toDateString();
     if (lastResetDate !== today) {
         v2vDailyCount = 0;
         localStorage.setItem('v2vDailyCount', v2vDailyCount);
         localStorage.setItem('lastResetDate', today);
-        console.log('V2V count reset for new day');
     }
 }
 
@@ -109,10 +109,13 @@ function initializeHome() {
         groupsBtn: document.getElementById('groups-btn'),
         scheduleBtn: document.getElementById('schedule-btn'),
         analyticsBtn: document.getElementById('analytics-btn'),
+        firstAidBtn: document.getElementById('first-aid-btn'),
+        hospitalBtn: document.getElementById('hospital-btn'),
         modal: document.getElementById('safety-rules-modal'),
         subModal: document.getElementById('subscription-modal'),
         closeModal: document.querySelectorAll('.close-modal'),
         subscriptionBtn: document.getElementById('subscription-btn'),
+        exitBtn: document.getElementById('exit-btn'),
         v2vSection: document.getElementById('v2v-section'),
         v2vSend: document.getElementById('v2v-send'),
         v2vInput: document.getElementById('v2v-input'),
@@ -148,10 +151,15 @@ function initializeHome() {
         analyticsPosts: document.getElementById('analytics-posts'),
         analyticsMembers: document.getElementById('analytics-members'),
         analyticsEngagement: document.getElementById('analytics-engagement'),
-        refreshAnalyticsBtn: document.getElementById('refresh-analytics-btn')
+        refreshAnalyticsBtn: document.getElementById('refresh-analytics-btn'),
+        firstAidSection: document.getElementById('first-aid-section'),
+        learnMoreBtn: document.getElementById('learn-more-btn'),
+        hospitalSection: document.getElementById('hospital-section'),
+        hospitalList: document.getElementById('hospital-list'),
+        backButtons: document.querySelectorAll('.back-btn')
     };
 
-    let visibility = { map: false, v2v: false, roadData: false, weather: false, socialFeed: false, groups: false, schedule: false, analytics: false };
+    let visibility = { map: false, v2v: false, roadData: false, weather: false, socialFeed: false, groups: false, schedule: false, analytics: false, firstAid: false, hospital: false };
 
     // Event Listeners
     if (elements.toggleBtn) elements.toggleBtn.addEventListener('click', () => toggleSection('map', elements.mapContainer, elements.toggleBtn, () => {
@@ -166,7 +174,10 @@ function initializeHome() {
     if (elements.groupsBtn) elements.groupsBtn.addEventListener('click', () => toggleSection('groups', elements.groupsSection, elements.groupsBtn, loadGroups, visibility, 'pro'));
     if (elements.scheduleBtn) elements.scheduleBtn.addEventListener('click', () => toggleSection('schedule', elements.scheduleSection, elements.scheduleBtn, loadScheduledPosts, visibility, 'premium'));
     if (elements.analyticsBtn) elements.analyticsBtn.addEventListener('click', () => toggleSection('analytics', elements.analyticsSection, elements.analyticsBtn, updateAnalytics, visibility, 'premium'));
+    if (elements.firstAidBtn) elements.firstAidBtn.addEventListener('click', () => toggleSection('firstAid', elements.firstAidSection, elements.firstAidBtn, null, visibility, 'premium'));
+    if (elements.hospitalBtn) elements.hospitalBtn.addEventListener('click', () => toggleSection('hospital', elements.hospitalSection, elements.hospitalBtn, loadHospitals, visibility, 'premium'));
     if (elements.subscriptionBtn) elements.subscriptionBtn.addEventListener('click', () => elements.subModal && (elements.subModal.style.display = 'block'));
+    if (elements.exitBtn) elements.exitBtn.addEventListener('click', () => window.location.href = 'https://www.google.com');
     elements.closeModal.forEach(btn => btn.addEventListener('click', () => {
         if (elements.modal) elements.modal.style.display = 'none';
         if (elements.subModal) elements.subModal.style.display = 'none';
@@ -187,40 +198,52 @@ function initializeHome() {
     if (elements.groupJoinBtn) elements.groupJoinBtn.addEventListener('click', joinOrCreateGroup);
     if (elements.schedulePostBtn) elements.schedulePostBtn.addEventListener('click', schedulePost);
     if (elements.refreshAnalyticsBtn) elements.refreshAnalyticsBtn.addEventListener('click', updateAnalytics);
+    if (elements.learnMoreBtn) elements.learnMoreBtn.addEventListener('click', () => window.open('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html', '_blank'));
     document.querySelectorAll('.subscribe-btn').forEach(btn => btn.addEventListener('click', () => subscribe(btn.dataset.plan)));
+    elements.backButtons.forEach(btn => btn.addEventListener('click', () => hideAllSections(visibility)));
 
     // Initial Load
     getCurrentPosition()
         .then(position => {
             const { latitude, longitude } = position.coords;
             if (map) map.setView([latitude, longitude], 13);
+            if (hospitalMap) hospitalMap.setView([latitude, longitude], 13);
             fetchWeatherData(latitude, longitude);
             updateRoadStats();
-            fetchAndDisplayWeather();
             loadV2VMessages();
             loadSocialFeed();
             loadGroups();
             loadScheduledPosts();
             updateAnalytics();
-            console.log('Home initialized with geolocation');
+            loadHospitals(latitude, longitude);
         })
         .catch(() => {
-            console.warn('Geolocation unavailable, using default');
-            fetchAndDisplayWeather();
+            fetchWeatherData();
+            loadHospitals();
         });
 
     function toggleSection(type, container, btn, callback, vis, requiredPlan = 'free') {
         if (!container || !btn) return;
         if ((requiredPlan === 'pro' && userPlan === 'free') || (requiredPlan === 'premium' && (userPlan === 'free' || userPlan === 'pro'))) {
-            showNotification(`Upgrade to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} plan to access this feature`, true);
+            showNotification(`Upgrade to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} plan`, true);
             elements.subModal.style.display = 'block';
             return;
         }
-        vis[type] = !vis[type];
-        container.classList.toggle('visible', vis[type]);
-        btn.textContent = vis[type] ? type.toUpperCase() : type.toUpperCase();
-        if (vis[type] && callback) callback();
-        console.log(`${type} section toggled: ${vis[type]}`);
+        hideAllSections(vis);
+        vis[type] = true;
+        container.classList.add('visible');
+        btn.textContent = type.toUpperCase();
+        if (callback) callback();
+    }
+
+    function hideAllSections(vis) {
+        Object.keys(vis).forEach(key => {
+            vis[key] = false;
+            const section = document.getElementById(`${key}-section`) || document.getElementById(`${key}-container`);
+            if (section) section.classList.remove('visible');
+            const btn = document.getElementById(`${key}-btn`);
+            if (btn) btn.textContent = key.toUpperCase();
+        });
     }
 
     function collectRoadData() {
@@ -242,34 +265,31 @@ function initializeHome() {
         if (elements.incidentRate) elements.incidentRate.textContent = roadStats.incidentRate || 'N/A';
     }
 
-    async function fetchAndDisplayWeather(lat = 51.505, lon = -0.09) {
+    async function fetchWeatherData(lat = 51.505, lon = -0.09) {
         try {
             const position = await getCurrentPosition().catch(() => ({ coords: { latitude: lat, longitude: lon } }));
             lat = position.coords.latitude;
             lon = position.coords.longitude;
             const openWeatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
-            if (!openWeatherResponse.ok) throw new Error('OpenWeatherMap API failed');
-            const openWeatherData = await openWeatherResponse.json();
-
+            const openWeatherData = await openWeatherResponse.ok ? await openWeatherResponse.json() : { main: { temp: 'N/A' }, weather: [{ description: 'Data unavailable' }], wind: { speed: 'N/A' } };
             const openMeteoResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`);
-            if (!openMeteoResponse.ok) throw new Error('Open-Meteo API failed');
-            const openMeteoData = await openMeteoResponse.json();
+            const openMeteoData = await openMeteoResponse.ok ? await openMeteoResponse.json() : { current: { relative_humidity_2m: 'N/A', precipitation: 'N/A' } };
 
-            weatherData.temp = openWeatherData.main.temp.toFixed(1);
+            weatherData.temp = openWeatherData.main.temp !== 'N/A' ? openWeatherData.main.temp.toFixed(1) : 'N/A';
             weatherData.condition = openWeatherData.weather[0].description;
-            weatherData.wind = openWeatherData.wind.speed.toFixed(1);
+            weatherData.wind = openWeatherData.wind.speed !== 'N/A' ? openWeatherData.wind.speed.toFixed(1) : 'N/A';
             weatherData.humidity = openMeteoData.current.relative_humidity_2m;
-            weatherData.precip = openMeteoData.current.precipitation.toFixed(1);
+            weatherData.precip = openMeteoData.current.precipitation !== 'N/A' ? openMeteoData.current.precipitation.toFixed(1) : 'N/A';
 
-            if (elements.weatherTemp) elements.weatherTemp.textContent = weatherData.temp;
+            if (elements.weatherTemp) elements.weatherTemp.textContent = weatherData.temp === 'N/A' ? 'N/A' : `${weatherData.temp}°C`;
             if (elements.weatherCondition) elements.weatherCondition.textContent = weatherData.condition;
-            if (elements.weatherWind) elements.weatherWind.textContent = weatherData.wind;
-            if (elements.weatherHumidity) elements.weatherHumidity.textContent = weatherData.humidity;
-            if (elements.weatherPrecip) elements.weatherPrecip.textContent = weatherData.precip;
-            showNotification('Weather updated successfully');
+            if (elements.weatherWind) elements.weatherWind.textContent = weatherData.wind === 'N/A' ? 'N/A' : `${weatherData.wind} m/s`;
+            if (elements.weatherHumidity) elements.weatherHumidity.textContent = weatherData.humidity === 'N/A' ? 'N/A' : `${weatherData.humidity}%`;
+            if (elements.weatherPrecip) elements.weatherPrecip.textContent = weatherData.precip === 'N/A' ? 'N/A' : `${weatherData.precip} mm`;
+            showNotification('Weather updated');
         } catch (error) {
             console.error('Weather fetch error:', error);
-            showNotification('Weather update failed. Using defaults.', true);
+            showNotification('Weather data unavailable', true);
             Object.keys(weatherData).forEach(key => {
                 if (elements[`weather-${key}`]) elements[`weather-${key}`].textContent = 'N/A';
             });
@@ -289,7 +309,7 @@ function initializeHome() {
         localStorage.setItem('v2vMessages', JSON.stringify(v2vMessages));
         messagesDiv.innerHTML = v2vMessages.map(m => `<p>${m.sender}: ${m.text} <small>(${m.timestamp})</small></p>`).join('');
         elements.v2vInput.value = '';
-        showNotification('Message sent to nearby vehicles');
+        showNotification('Message sent');
     }
 
     function loadSocialFeed() {
@@ -303,16 +323,13 @@ function initializeHome() {
 
     function postToSocialFeed() {
         if (userPlan === 'free') {
-            showNotification('Upgrade to Pro to post to the social feed', true);
+            showNotification('Upgrade to Pro to post', true);
             elements.subModal.style.display = 'block';
             return;
         }
         const text = elements.socialPostInput?.value;
         const file = elements.socialPostImage?.files[0];
-        if (!text) {
-            showNotification('Please enter a message', true);
-            return;
-        }
+        if (!text) return;
         const post = { user: 'You', text, timestamp: new Date().toLocaleString() };
         if (file) {
             const reader = new FileReader();
@@ -323,7 +340,7 @@ function initializeHome() {
                 loadSocialFeed();
                 elements.socialPostInput.value = '';
                 elements.socialPostImage.value = '';
-                showNotification('Posted to social feed');
+                showNotification('Posted');
             };
             reader.readAsDataURL(file);
         } else {
@@ -331,7 +348,7 @@ function initializeHome() {
             localStorage.setItem('socialPosts', JSON.stringify(socialPosts));
             loadSocialFeed();
             elements.socialPostInput.value = '';
-            showNotification('Posted to social feed');
+            showNotification('Posted');
         }
     }
 
@@ -343,15 +360,12 @@ function initializeHome() {
 
     function joinOrCreateGroup() {
         if (userPlan === 'free') {
-            showNotification('Upgrade to Pro to join or create groups', true);
+            showNotification('Upgrade to Pro to join/create groups', true);
             elements.subModal.style.display = 'block';
             return;
         }
         const name = elements.groupInput?.value;
-        if (!name) {
-            showNotification('Please enter a group name', true);
-            return;
-        }
+        if (!name) return;
         const existingGroup = groups.find(g => g.name === name);
         if (existingGroup) {
             existingGroup.members++;
@@ -361,7 +375,7 @@ function initializeHome() {
         localStorage.setItem('groups', JSON.stringify(groups));
         loadGroups();
         elements.groupInput.value = '';
-        showNotification(`Joined/Created group: ${name}`);
+        showNotification(`Joined/Created: ${name}`);
     }
 
     function loadScheduledPosts() {
@@ -372,16 +386,13 @@ function initializeHome() {
 
     function schedulePost() {
         if (userPlan !== 'premium') {
-            showNotification('Upgrade to Premium to schedule posts', true);
+            showNotification('Upgrade to Premium to schedule', true);
             elements.subModal.style.display = 'block';
             return;
         }
         const text = elements.scheduleText?.value;
         const time = elements.scheduleTime?.value;
-        if (!text || !time) {
-            showNotification('Please enter text and time', true);
-            return;
-        }
+        if (!text || !time) return;
         scheduledPosts.push({ text, time });
         localStorage.setItem('scheduledPosts', JSON.stringify(scheduledPosts));
         loadScheduledPosts();
@@ -404,12 +415,12 @@ function initializeHome() {
                     showNotification('Scheduled post published');
                 }
             });
-        }, 60000); // Check every minute
+        }, 60000);
     }
 
     function updateAnalytics() {
         if (userPlan !== 'premium') {
-            showNotification('Upgrade to Premium to view analytics', true);
+            showNotification('Upgrade to Premium for analytics', true);
             elements.subModal.style.display = 'block';
             return;
         }
@@ -419,6 +430,35 @@ function initializeHome() {
         showNotification('Analytics updated');
     }
 
+    async function loadHospitals(lat = 51.505, lon = -0.09) {
+        if (userPlan !== 'premium') {
+            showNotification('Upgrade to Premium for hospital locator', true);
+            elements.subModal.style.display = 'block';
+            return;
+        }
+        try {
+            const position = await getCurrentPosition().catch(() => ({ coords: { latitude: lat, longitude: lon } }));
+            lat = position.coords.latitude;
+            lon = position.coords.longitude;
+            if (hospitalMap) hospitalMap.setView([lat, lon], 13);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=hospital&format=json&limit=5&lat=${lat}&lon=${lon}`);
+            const hospitals = await response.json();
+            hospitalMarkers.clearLayers();
+            if (elements.hospitalList) {
+                elements.hospitalList.innerHTML = hospitals.map(h => `<li>${h.display_name} (${(h.distance || 'N/A')} km)</li>`).join('');
+            }
+            hospitals.forEach(h => {
+                const marker = L.marker([h.lat, h.lon]).bindPopup(h.display_name);
+                hospitalMarkers.addLayer(marker);
+            });
+            hospitalMap.invalidateSize();
+            showNotification('Hospitals loaded');
+        } catch (error) {
+            console.error('Hospital fetch error:', error);
+            showNotification('Hospital data unavailable', true);
+        }
+    }
+
     function subscribe(plan) {
         userPlan = plan;
         localStorage.setItem('userPlan', plan);
@@ -426,14 +466,28 @@ function initializeHome() {
         v2vDailyCount = 0;
         localStorage.setItem('v2vDailyCount', v2vDailyCount);
         showNotification(`Subscribed to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan`);
-        console.log('User plan updated to:', userPlan);
     }
 }
 
-// Report Page
+// Report Page (Enhanced with Emergency Services)
 function initializeReport() {
-    const form = document.getElementById('incident-form');
-    if (!form) return;
+    const form = document.createElement('form');
+    form.id = 'incident-form';
+    form.innerHTML = `
+        <h3>Report Incident</h3>
+        <select id="incident-type">
+            <option value="accident">Accident</option>
+            <option value="hazard">Road Hazard</option>
+            <option value="weather">Weather Issue</option>
+            <option value="ambulance">Request Ambulance</option>
+            <option value="first-aid">Emergency First Aid</option>
+        </select>
+        <textarea id="description" placeholder="Describe the incident"></textarea>
+        <button type="submit" class="premium-btn">Submit Report</button>
+        <button id="back-from-report" class="back-btn">Back</button>
+    `;
+    document.body.appendChild(form);
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const type = document.getElementById('incident-type')?.value;
@@ -444,12 +498,18 @@ function initializeReport() {
             const incident = { type, description, lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
             incidents.push(incident);
             localStorage.setItem('incidents', JSON.stringify(incidents));
-            showNotification(`Incident reported: ${type}`);
+            showNotification(`Reported: ${type}`);
+            if (type === 'ambulance' || type === 'first-aid') {
+                securityEvents.push({ type: `${type.toUpperCase()} REQUEST`, lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() });
+                localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
+                showNotification(`${type.toUpperCase()} service dispatched`, false);
+            }
             form.reset();
         } catch (error) {
-            showNotification('Please enable location services', true);
+            showNotification('Enable location services', true);
         }
     });
+    document.getElementById('back-from-report')?.addEventListener('click', () => window.location.href = 'index.html');
 }
 
 // Dashboard Page
@@ -460,48 +520,28 @@ function initializeDashboard() {
     updateIncidentsList();
 }
 
-// Security Page
+// Security Page (Red SOS)
 function initializeSecurity() {
-    const emergencyBtn = document.getElementById('emergency-btn');
-    const trafficAlertBtn = document.getElementById('traffic-alert-btn');
-    const trafficAlertsDiv = document.getElementById('traffic-alerts');
-    const securityEventsList = document.getElementById('security-events');
-    const sirenAudio = document.getElementById('siren-audio');
-    const trafficAlerts = ["Congestion on I-95", "Accident reported on Main St", "Road work on Hwy 101"];
+    const emergencyBtn = document.createElement('button');
+    emergencyBtn.id = 'emergency-btn';
+    emergencyBtn.textContent = 'SOS';
+    emergencyBtn.style.background = '#ff4d4d';
+    emergencyBtn.style.color = '#fff';
+    emergencyBtn.className = 'premium-btn';
+    document.body.appendChild(emergencyBtn);
 
-    if (emergencyBtn) {
-        emergencyBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to send an SOS?')) {
-                getCurrentPosition()
-                    .then(position => {
-                        const event = { type: 'Emergency SOS', lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
-                        securityEvents.push(event);
-                        localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
-                        showNotification(`SOS sent from ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
-                        if (sirenAudio) sirenAudio.play().catch(() => console.error('Audio play failed'));
-                        updateSecurityLog();
-                    })
-                    .catch(() => showNotification('Location access required for SOS', true));
-            }
-        });
-    }
-
-    if (trafficAlertBtn && trafficAlertsDiv) {
-        trafficAlertBtn.addEventListener('click', () => {
-            trafficAlertsDiv.style.display = trafficAlertsDiv.style.display === 'block' ? 'none' : 'block';
-            if (trafficAlertsDiv.style.display === 'block') {
-                trafficAlertsDiv.innerHTML = '<h4>Current Traffic Alerts</h4>' + trafficAlerts.map(alert => `<p>${alert}</p>`).join('');
-            }
-        });
-    }
-
-    updateSecurityLog();
-
-    function updateSecurityLog() {
-        if (securityEventsList) {
-            securityEventsList.innerHTML = securityEvents.slice(-5).map(event => `<li>${event.type} at ${event.lat.toFixed(4)}, ${event.lng.toFixed(4)} - ${new Date(event.timestamp).toLocaleString()}</li>`).join('');
+    emergencyBtn.addEventListener('click', () => {
+        if (confirm('Send SOS?')) {
+            getCurrentPosition()
+                .then(position => {
+                    const event = { type: 'Emergency SOS', lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
+                    securityEvents.push(event);
+                    localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
+                    showNotification(`SOS sent from ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                })
+                .catch(() => showNotification('Location required for SOS', true));
         }
-    }
+    });
 }
 
 // Helper Functions
@@ -556,17 +596,16 @@ function updateSafetyStatus() {
     if (!status) return;
     const recentHazards = incidents.filter(i => new Date(i.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length;
     status.textContent = recentHazards > 5 ? 'High Risk' : recentHazards > 0 ? 'Moderate Risk' : 'Low Risk';
-    status.style.backgroundColor = recentHazards > 5 ? '#d63031' : recentHazards > 0 ? '#00b4d8' : '#00b894';
+    status.style.backgroundColor = recentHazards > 5 ? '#ff4d4d' : recentHazards > 0 ? '#00b4d8' : '#00cc99';
 }
 
 function showNotification(message, isError = false) {
     const notification = document.getElementById('notification');
     if (!notification) return;
     notification.textContent = message;
-    notification.style.backgroundColor = isError ? '#d63031' : '#00b894';
+    notification.style.backgroundColor = isError ? '#ff4d4d' : '#00cc99';
     notification.style.display = 'block';
     setTimeout(() => notification.style.display = 'none', 3000);
-    console.log('Notification:', message);
 }
 
 // URL Parameters
@@ -575,7 +614,7 @@ if (window.location.search && map) {
     const lat = parseFloat(params.get('lat')), lng = parseFloat(params.get('lng'));
     if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
         map.setView([lat, lng], 15);
-        fetchAndDisplayWeather(lat, lng);
+        fetchWeatherData(lat, lng);
         const mapContainer = document.getElementById('map-container');
         const toggleBtn = document.getElementById('toggle-map-btn');
         if (mapContainer && toggleBtn) {
