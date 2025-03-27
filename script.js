@@ -32,6 +32,8 @@ function initializeHome() {
     const safetyRulesBtn = document.getElementById('safety-rules-btn');
     const modal = document.getElementById('safety-rules-modal');
     const closeModal = document.querySelector('.close-modal');
+    const advert = document.getElementById('road-safety-advert');
+    const closeAdvert = document.querySelector('.close-advert');
     let isMapVisible = false;
 
     // Map toggle
@@ -59,6 +61,11 @@ function initializeHome() {
         if (e.target === modal) {
             modal.style.display = 'none';
         }
+    });
+
+    // Floating advert
+    closeAdvert.addEventListener('click', () => {
+        advert.style.display = 'none';
     });
 
     getCurrentPosition()
