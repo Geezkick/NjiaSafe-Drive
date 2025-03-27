@@ -20,20 +20,22 @@
         </div>
         <ul class="nav-links">
             <li><a href="index.html" class="active">Home</a></li>
-            <li><a href="report.html">Report Incident</a></li>
+            <li><a href="report.html">Report</a></li>
             <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="security.html">Road Security</a></li>
+            <li><a href="security.html">Security</a></li>
+            <li><button id="theme-toggle" class="theme-toggle-btn">Toggle Theme</button></li>
         </ul>
     </nav>
 
     <div class="container">
         <header>
-            <h2>Welcome to Real-time Road Safety</h2>
-            <p>Your ultimate companion for safe driving.</p>
+            <h2>Next-Gen Road Safety</h2>
+            <p>Connected. Secure. Safe.</p>
             <div class="header-buttons">
-                <button id="toggle-map-btn" class="map-toggle-btn">Show Map</button>
-                <button id="safety-rules-btn" class="safety-rules-btn">Road Safety Rules</button>
-                <button id="security-btn" class="security-btn">Road Security</button>
+                <button id="toggle-map-btn" class="action-btn">Show Map</button>
+                <button id="safety-rules-btn" class="action-btn">Safety Rules</button>
+                <button id="security-btn" class="action-btn">Road Security</button>
+                <button id="v2v-btn" class="action-btn">V2V Network</button>
             </div>
         </header>
 
@@ -44,29 +46,36 @@
                     <span id="safety-status">Checking safety...</span>
                 </div>
             </div>
+
+            <div class="v2v-section" id="v2v-section">
+                <h3>Vehicle-to-Vehicle Network</h3>
+                <div id="v2v-messages" class="v2v-messages"></div>
+                <input type="text" id="v2v-input" placeholder="Send a message to nearby vehicles">
+                <button id="v2v-send">Send</button>
+            </div>
         </div>
     </div>
 
     <div class="modal" id="safety-rules-modal">
         <div class="modal-content">
             <span class="close-modal">×</span>
-            <h3>Road Safety Rules for Drivers</h3>
+            <h3>Road Safety Rules</h3>
             <ul>
                 <li>Always wear your seatbelt.</li>
-                <li>Obey speed limits and traffic signals.</li>
-                <li>Avoid distractions (e.g., texting while driving).</li>
-                <li>Keep a safe distance from other vehicles.</li>
-                <li>Never drive under the influence.</li>
-                <li>Use indicators when turning or changing lanes.</li>
-                <li>Be cautious in adverse weather conditions.</li>
+                <li>Obey speed limits.</li>
+                <li>Avoid distractions.</li>
+                <li>Maintain safe distances.</li>
+                <li>No driving under influence.</li>
+                <li>Use turn signals.</li>
+                <li>Drive cautiously in bad weather.</li>
             </ul>
         </div>
     </div>
 
     <div class="floating-advert" id="road-safety-advert">
         <span class="close-advert">×</span>
-        <h3>Drive Safe!</h3>
-        <p>Tip: Check your tires regularly to prevent accidents.</p>
+        <h3>Stay Safe!</h3>
+        <p>Tip: Check tires regularly.</p>
         <img src="assets/warning.png" alt="Safety Icon" class="advert-icon">
     </div>
 
