@@ -2,6 +2,11 @@
 const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace with your API key
 let map, markersLayer;
 const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
+const trafficAlerts = [
+    "Heavy congestion on I-95 Northbound",
+    "Accident reported on Main St",
+    "Road work on Highway 101 - expect delays"
+];
 
 // Initialize map on home page if it exists
 if (document.getElementById('map')) {
@@ -22,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeReport();
     } else if (page === 'dashboard.html') {
         initializeDashboard();
+    } else if (page === 'security.html') {
+        initializeSecurity();
     }
 });
 
@@ -30,13 +37,13 @@ function initializeHome() {
     const toggleBtn = document.getElementById('toggle-map-btn');
     const mapContainer = document.getElementById('map-container');
     const safetyRulesBtn = document.getElementById('safety-rules-btn');
+    const securityBtn = document.getElementById('security-btn');
     const modal = document.getElementById('safety-rules-modal');
     const closeModal = document.querySelector('.close-modal');
     const advert = document.getElementById('road-safety-advert');
     const closeAdvert = document.querySelector('.close-advert');
     let isMapVisible = false;
 
-    // Map toggle
     toggleBtn.addEventListener('click', () => {
         isMapVisible = !isMapVisible;
         mapContainer.classList.toggle('visible', isMapVisible);
@@ -48,9 +55,12 @@ function initializeHome() {
         }
     });
 
-    // Safety rules modal
     safetyRulesBtn.addEventListener('click', () => {
         modal.style.display = 'block';
+    });
+
+    securityBtn.addEventListener('click', () => {
+        window.location.href = 'security.html';
     });
 
     closeModal.addEventListener('click', () => {
@@ -63,7 +73,6 @@ function initializeHome() {
         }
     });
 
-    // Floating advert
     closeAdvert.addEventListener('click', () => {
         advert.style.display = 'none';
     });
@@ -109,6 +118,31 @@ function initializeDashboard() {
     document.getElementById('search-btn').addEventListener('click', searchLocation);
     document.querySelectorAll('.filter').forEach(cb => cb.addEventListener('change', updateIncidentsList));
     updateIncidentsList();
+}
+
+// Security page logic
+function initializeSecurity() {
+    const emergencyBtn = document.getElementById('emergency-btn');
+    const trafficAlertBtn = document.getElementById('traffic-alert-btn');
+    const trafficAlertsDiv = document.getElementById('traffic-alerts');
+
+    emergencyBtn.addEventListener('click', () => {
+        if (confirm('Send emergency SOS to local authorities?')) {
+            getCurrentPosition()
+                .then(position => {
+                    showNotification('Emergency SOS sent!');
+                    console.log(`SOS: Lat ${position.coords.latitude}, Lng ${position.coords.longitude}`);
+                })
+                .catch(() => showNotification('Error: Enable location', true));
+        }
+    });
+
+    trafficAlertBtn.addEventListener('click', () => {
+        trafficAlertsDiv.style.display = trafficAlertsDiv.style.display === 'block' ? 'none' : 'block';
+        if (trafficAlertsDiv.style.display === 'block') {
+            trafficAlertsDiv.innerHTML = '<h4>Live Traffic Updates</h4>' + trafficAlerts.map(alert => `<p>${alert}</p>`).join('');
+        }
+    });
 }
 
 // Helper functions
@@ -180,7 +214,7 @@ async function fetchWeatherData(lat, lon) {
             };
             incidents.push(weatherIncident);
             saveIncidents();
-            if (map && document.getElementById('map-container').classList.contains('visible')) {
+            if (map && document.getElementById('map-container')?.classList.contains('visible')) {
                 loadIncidentsOnMap();
             }
             updateSafetyStatus();
