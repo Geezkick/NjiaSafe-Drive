@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjiaSafe Drive - Advanced Road System</title>
+    <title>NjiaSafe Drive - Road Safety Network</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -23,56 +23,61 @@
             <li><a href="dashboard.html">Dashboard</a></li>
             <li><a href="security.html">Security</a></li>
             <li><button id="theme-toggle" class="theme-toggle-btn">Dark Mode</button></li>
+            <li><button id="subscription-btn" class="action-btn">Subscription</button></li>
         </ul>
     </nav>
 
     <div class="container">
         <header>
-            <h2>Advanced Road Safety Ecosystem</h2>
-            <p>Real-time intelligence for secure, connected travel.</p>
+            <h2>Road Safety Network</h2>
+            <p>Empowering safer journeys with real-time insights and community.</p>
         </header>
 
-        <div class="floating-buttons">
-            <button id="toggle-map-btn" class="action-btn" data-tooltip="Interactive Map"><span>Map</span></button>
-            <button id="safety-rules-btn" class="action-btn" data-tooltip="Safety Guidelines"><span>Rules</span></button>
-            <button id="security-btn" class="action-btn" data-tooltip="Security Overview"><span>Security</span></button>
-            <button id="v2v-btn" class="action-btn" data-tooltip="Vehicle Communication"><span>V2V</span></button>
-            <button id="road-data-btn" class="action-btn" data-tooltip="Road Analytics"><span>Data</span></button>
-            <button id="weather-btn" class="action-btn" data-tooltip="Weather Insights"><span>Weather</span></button>
+        <div class="control-panel">
+            <button id="toggle-map-btn" class="action-btn" data-tooltip="View Map"><span>Map</span></button>
+            <button id="safety-rules-btn" class="action-btn" data-tooltip="Safety Rules"><span>Rules</span></button>
+            <button id="security-btn" class="action-btn" data-tooltip="Security Hub"><span>Security</span></button>
+            <button id="v2v-btn" class="action-btn" data-tooltip="V2V Comms"><span>V2V</span></button>
+            <button id="road-data-btn" class="action-btn" data-tooltip="Road Data"><span>Data</span></button>
+            <button id="weather-btn" class="action-btn" data-tooltip="Weather Info"><span>Weather</span></button>
+            <button id="social-feed-btn" class="action-btn" data-tooltip="Social Feed"><span>Feed</span></button>
+            <button id="groups-btn" class="action-btn" data-tooltip="Community Groups"><span>Groups</span></button>
+            <button id="schedule-btn" class="action-btn" data-tooltip="Schedule Posts"><span>Schedule</span></button>
+            <button id="analytics-btn" class="action-btn" data-tooltip="Analytics"><span>Analytics</span></button>
         </div>
 
         <div class="main-content">
             <div class="map-container" id="map-container">
                 <div id="map"></div>
                 <div class="safety-signal">
-                    <span id="safety-status">Analyzing...</span>
+                    <span id="safety-status">Assessing...</span>
                 </div>
             </div>
 
             <div class="v2v-section" id="v2v-section">
-                <h3>Vehicle-to-Vehicle Network</h3>
+                <h3>Vehicle-to-Vehicle Communication</h3>
                 <div id="v2v-messages" class="v2v-messages"></div>
-                <input type="text" id="v2v-input" placeholder="Broadcast to nearby vehicles">
+                <input type="text" id="v2v-input" placeholder="Send a message to nearby vehicles">
                 <button id="v2v-send">Send</button>
                 <div class="v2v-stats">
                     <p>Connected Vehicles: <span id="v2v-count">0</span></p>
-                    <p>Signal Strength: <span id="v2v-signal">N/A</span></p>
+                    <p>Signal Quality: <span id="v2v-signal">N/A</span></p>
                 </div>
             </div>
 
             <div class="road-data-section" id="road-data-section">
-                <h3>Road Analytics</h3>
+                <h3>Road Conditions</h3>
                 <div id="road-stats">
-                    <p>Traffic Density: <span id="traffic-density">N/A</span></p>
-                    <p>Average Speed: <span id="avg-speed">N/A</span> km/h</p>
-                    <p>Incident Rate: <span id="incident-rate">N/A</span></p>
+                    <p>Traffic Density: <span id="traffic-density">N/A</span>%</p>
+                    <p>Avg Speed: <span id="avg-speed">N/A</span> km/h</p>
+                    <p>Incident Rate: <span id="incident-rate">N/A</span>/hr</p>
                     <div id="traffic-visual" class="traffic-visual"></div>
                 </div>
-                <button id="collect-data-btn">Update Data</button>
+                <button id="collect-data-btn">Refresh Data</button>
             </div>
 
             <div class="weather-section" id="weather-section">
-                <h3>Weather Insights</h3>
+                <h3>Weather Conditions</h3>
                 <div id="weather-info">
                     <p>Temperature: <span id="weather-temp">N/A</span>°C</p>
                     <p>Condition: <span id="weather-condition">N/A</span></p>
@@ -80,7 +85,38 @@
                     <p>Humidity: <span id="weather-humidity">N/A</span>%</p>
                     <p>Precipitation: <span id="weather-precip">N/A</span> mm</p>
                 </div>
-                <button id="refresh-weather-btn">Refresh</button>
+                <button id="refresh-weather-btn">Update</button>
+            </div>
+
+            <div class="social-feed-section" id="social-feed-section">
+                <h3>Social Safety Feed</h3>
+                <div id="social-feed" class="social-feed"></div>
+                <input type="text" id="social-post-input" placeholder="Share a safety update">
+                <input type="file" id="social-post-image" accept="image/*">
+                <button id="social-post-btn">Post</button>
+            </div>
+
+            <div class="groups-section" id="groups-section">
+                <h3>Community Groups</h3>
+                <ul id="group-list"></ul>
+                <input type="text" id="group-input" placeholder="Create or join a group">
+                <button id="group-join-btn">Join/Create</button>
+            </div>
+
+            <div class="schedule-section" id="schedule-section">
+                <h3>Schedule Safety Posts</h3>
+                <textarea id="schedule-text" placeholder="Enter your safety tip or alert"></textarea>
+                <input type="datetime-local" id="schedule-time">
+                <button id="schedule-post-btn">Schedule</button>
+                <ul id="scheduled-posts"></ul>
+            </div>
+
+            <div class="analytics-section" id="analytics-section">
+                <h3>Analytics Dashboard</h3>
+                <p>Posts Shared: <span id="analytics-posts">0</span></p>
+                <p>Group Members: <span id="analytics-members">0</span></p>
+                <p>Engagement Rate: <span id="analytics-engagement">N/A</span>%</p>
+                <button id="refresh-analytics-btn">Refresh</button>
             </div>
         </div>
     </div>
@@ -88,24 +124,58 @@
     <div class="modal" id="safety-rules-modal">
         <div class="modal-content">
             <span class="close-modal">×</span>
-            <h3>Road Safety Guidelines</h3>
+            <h3>Safety Guidelines</h3>
             <ul>
-                <li>Always wear your seatbelt.</li>
-                <li>Adhere to speed limits.</li>
-                <li>Avoid phone distractions.</li>
-                <li>Keep a safe following distance.</li>
-                <li>Never drive impaired.</li>
-                <li>Signal intentions clearly.</li>
-                <li>Adjust for adverse weather.</li>
+                <li>Wear your seatbelt at all times.</li>
+                <li>Respect speed limits and road signs.</li>
+                <li>Avoid distractions like mobile phones.</li>
+                <li>Maintain a safe distance from other vehicles.</li>
+                <li>Do not drive under the influence.</li>
+                <li>Use indicators to signal intentions.</li>
+                <li>Adjust driving in adverse weather conditions.</li>
             </ul>
         </div>
     </div>
 
-    <div class="floating-advert" id="road-safety-advert">
-        <span class="close-advert">×</span>
-        <h3>Safety Alert</h3>
-        <p>Check tire pressure weekly!</p>
-        <img src="assets/warning.png" alt="Safety Icon" class="advert-icon">
+    <div class="modal" id="subscription-modal">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <h3>Subscription Plans</h3>
+            <div class="subscription-plans">
+                <div class="plan">
+                    <h4>Free</h4>
+                    <p>$0/month</p>
+                    <ul>
+                        <li>Basic Map Access</li>
+                        <li>V2V Messaging (5/day)</li>
+                        <li>Weather Updates</li>
+                    </ul>
+                    <button class="subscribe-btn" data-plan="free">Select</button>
+                </div>
+                <div class="plan">
+                    <h4>Pro</h4>
+                    <p>$9.99/month</p>
+                    <ul>
+                        <li>All Free Features</li>
+                        <li>Unlimited V2V Messaging</li>
+                        <li>Social Feed Posting</li>
+                        <li>Group Creation</li>
+                    </ul>
+                    <button class="subscribe-btn" data-plan="pro">Select</button>
+                </div>
+                <div class="plan">
+                    <h4>Premium</h4>
+                    <p>$19.99/month</p>
+                    <ul>
+                        <li>All Pro Features</li>
+                        <li>Content Scheduling</li>
+                        <li>Analytics Dashboard</li>
+                        <li>Priority Support</li>
+                    </ul>
+                    <button class="subscribe-btn" data-plan="premium">Select</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="notification" id="notification"></div>
