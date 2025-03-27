@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjiaSafe Drive - Smart Road System</title>
+    <title>NjiaSafe Drive - Advanced Road System</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <video autoplay muted loop id="traffic-video">
         <source src="assets/traffic-video.mp4" type="video/mp4">
-        Your browser does not support the video tag.
     </video>
 
     <nav class="navbar">
@@ -23,67 +22,65 @@
             <li><a href="report.html">Report</a></li>
             <li><a href="dashboard.html">Dashboard</a></li>
             <li><a href="security.html">Security</a></li>
-            <li><button id="theme-toggle" class="theme-toggle-btn">Toggle Theme</button></li>
+            <li><button id="theme-toggle" class="theme-toggle-btn">Dark Mode</button></li>
         </ul>
     </nav>
 
     <div class="container">
         <header>
-            <h2>Smart Road Safety Network</h2>
-            <p>Real-time connectivity for a safer tomorrow.</p>
-            <div class="header-buttons">
-                <button id="toggle-map-btn" class="action-btn">Show Map</button>
-                <button id="safety-rules-btn" class="action-btn">Safety Rules</button>
-                <button id="security-btn" class="action-btn">Road Security</button>
-                <button id="v2v-btn" class="action-btn">V2V Network</button>
-                <button id="road-data-btn" class="action-btn">Road Data</button>
-                <button id="weather-btn" class="action-btn">Weather</button>
-            </div>
+            <h2>Advanced Road Safety Ecosystem</h2>
+            <p>Real-time intelligence for secure, connected travel.</p>
         </header>
+
+        <div class="floating-buttons">
+            <button id="toggle-map-btn" class="action-btn" data-tooltip="Interactive Map"><span>Map</span></button>
+            <button id="safety-rules-btn" class="action-btn" data-tooltip="Safety Guidelines"><span>Rules</span></button>
+            <button id="security-btn" class="action-btn" data-tooltip="Security Overview"><span>Security</span></button>
+            <button id="v2v-btn" class="action-btn" data-tooltip="Vehicle Communication"><span>V2V</span></button>
+            <button id="road-data-btn" class="action-btn" data-tooltip="Road Analytics"><span>Data</span></button>
+            <button id="weather-btn" class="action-btn" data-tooltip="Weather Insights"><span>Weather</span></button>
+        </div>
 
         <div class="main-content">
             <div class="map-container" id="map-container">
                 <div id="map"></div>
                 <div class="safety-signal">
-                    <span id="safety-status">Checking safety...</span>
+                    <span id="safety-status">Analyzing...</span>
                 </div>
-            </div>
-            <div class="weather-section" id="weather-section">
-                <h3>Current Weather Conditions</h3>
-                <div id="weather-info">
-                    <p>Temperature: <span id="weather-temp">N/A</span>°C</p>
-                    <p>Condition: <span id="weather-condition">N/A</span></p>
-                    <p>Wind Speed: <span id="weather-wind">N/A</span> m/s</p>
-                    <p>Humidity: <span id="weather-humidity">N/A</span>%</p> <!-- Added for Open-Meteo -->
-                </div>
-                <button id="refresh-weather-btn">Refresh Weather</button>
             </div>
 
             <div class="v2v-section" id="v2v-section">
                 <h3>Vehicle-to-Vehicle Network</h3>
                 <div id="v2v-messages" class="v2v-messages"></div>
-                <input type="text" id="v2v-input" placeholder="Send message to nearby vehicles">
+                <input type="text" id="v2v-input" placeholder="Broadcast to nearby vehicles">
                 <button id="v2v-send">Send</button>
+                <div class="v2v-stats">
+                    <p>Connected Vehicles: <span id="v2v-count">0</span></p>
+                    <p>Signal Strength: <span id="v2v-signal">N/A</span></p>
+                </div>
             </div>
 
             <div class="road-data-section" id="road-data-section">
-                <h3>Real-Time Road Statistics</h3>
+                <h3>Road Analytics</h3>
                 <div id="road-stats">
                     <p>Traffic Density: <span id="traffic-density">N/A</span></p>
                     <p>Average Speed: <span id="avg-speed">N/A</span> km/h</p>
                     <p>Incident Rate: <span id="incident-rate">N/A</span></p>
+                    <div id="traffic-visual" class="traffic-visual"></div>
                 </div>
-                <button id="collect-data-btn">Collect Data Now</button>
+                <button id="collect-data-btn">Update Data</button>
             </div>
 
             <div class="weather-section" id="weather-section">
-                <h3>Current Weather Conditions</h3>
+                <h3>Weather Insights</h3>
                 <div id="weather-info">
                     <p>Temperature: <span id="weather-temp">N/A</span>°C</p>
                     <p>Condition: <span id="weather-condition">N/A</span></p>
                     <p>Wind Speed: <span id="weather-wind">N/A</span> m/s</p>
+                    <p>Humidity: <span id="weather-humidity">N/A</span>%</p>
+                    <p>Precipitation: <span id="weather-precip">N/A</span> mm</p>
                 </div>
-                <button id="refresh-weather-btn">Refresh Weather</button>
+                <button id="refresh-weather-btn">Refresh</button>
             </div>
         </div>
     </div>
@@ -91,23 +88,23 @@
     <div class="modal" id="safety-rules-modal">
         <div class="modal-content">
             <span class="close-modal">×</span>
-            <h3>Road Safety Rules</h3>
+            <h3>Road Safety Guidelines</h3>
             <ul>
                 <li>Always wear your seatbelt.</li>
-                <li>Obey speed limits.</li>
-                <li>Avoid distractions.</li>
-                <li>Maintain safe distances.</li>
-                <li>No driving under influence.</li>
-                <li>Use turn signals.</li>
-                <li>Drive cautiously in bad weather.</li>
+                <li>Adhere to speed limits.</li>
+                <li>Avoid phone distractions.</li>
+                <li>Keep a safe following distance.</li>
+                <li>Never drive impaired.</li>
+                <li>Signal intentions clearly.</li>
+                <li>Adjust for adverse weather.</li>
             </ul>
         </div>
     </div>
 
     <div class="floating-advert" id="road-safety-advert">
         <span class="close-advert">×</span>
-        <h3>Stay Safe!</h3>
-        <p>Tip: Check tires regularly.</p>
+        <h3>Safety Alert</h3>
+        <p>Check tire pressure weekly!</p>
         <img src="assets/warning.png" alt="Safety Icon" class="advert-icon">
     </div>
 

@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <video autoplay muted loop id="traffic-video">
+        <source src="assets/traffic-video.mp4" type="video/mp4">
+    </video>
+
     <nav class="navbar">
         <div class="logo">
             <img src="assets/logo.png" alt="NjiaSafe Logo" class="logo-img">
@@ -14,45 +18,34 @@
         </div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="report.html">Report Incident</a></li>
+            <li><a href="report.html">Report</a></li>
             <li><a href="dashboard.html">Dashboard</a></li>
-            <li><a href="security.html" class="active">Road Security</a></li>
+            <li><a href="security.html" class="active">Security</a></li>
+            <li><button id="theme-toggle" class="theme-toggle-btn">Dark Mode</button></li>
         </ul>
     </nav>
 
     <div class="container">
-        <div class="security-page">
+        <header>
             <h2>Road Security Hub</h2>
-            <div class="cctv-section">
-                <h3>Live CCTV Footage</h3>
-                <video controls class="cctv-video">
-                    <source src="assets/cctv-sample.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <p>Sample footage from road cameras (replace with live feed API).</p>
+            <p>Monitor and respond to security events.</p>
+        </header>
+        <div class="security-content">
+            <button id="emergency-btn" class="action-btn">Emergency SOS</button>
+            <button id="traffic-alert-btn" class="action-btn">Traffic Alerts</button>
+            <div id="traffic-alerts" class="traffic-alerts"></div>
+            <div id="security-log" class="security-log">
+                <h4>Security Event Log</h4>
+                <ul id="security-events"></ul>
             </div>
-
-            <div class="protocols-section">
-                <h3>Security Protocols</h3>
-                <ul>
-                    <li><strong>Real-time Monitoring:</strong> 24/7 CCTV surveillance.</li>
-                    <li><strong>Incident Alerts:</strong> Immediate notifications for detected threats.</li>
-                    <li><strong>Data Encryption:</strong> Secure transmission of footage.</li>
-                    <li><strong>Access Control:</strong> Authorized personnel only.</li>
-                    <li><strong>Backup Storage:</strong> 30-day cloud archive.</li>
-                </ul>
-            </div>
-
-            <div class="extra-features">
-                <h3>Advanced Safety Features</h3>
-                <button id="emergency-btn">Emergency SOS</button>
-                <button id="traffic-alert-btn">Live Traffic Alerts</button>
-                <div id="traffic-alerts" class="traffic-alerts"></div>
-            </div>
+            <video controls id="cctv-video">
+                <source src="assets/cctv-sample.mp4" type="video/mp4">
+            </video>
         </div>
     </div>
 
     <div class="notification" id="notification"></div>
+    <audio id="siren-audio" src="assets/siren.mp3"></audio>
     <script src="script.js"></script>
 </body>
 </html>

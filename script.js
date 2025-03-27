@@ -1,14 +1,15 @@
 // Constants
-const OPENWEATHERMAP_API_KEY = 'your_openweathermap_api_key_here'; // Replace with your OpenWeatherMap API key
+const OPENWEATHERMAP_API_KEY = 'your_openweathermap_api_key_here'; // Replace with your key
 const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
-const v2vMessages = [];
+const v2vMessages = JSON.parse(localStorage.getItem('v2vMessages')) || [];
 const roadStats = { trafficDensity: 0, avgSpeed: 0, incidentRate: 0 };
-const weatherData = { temp: null, condition: null, wind: null, humidity: null };
+const weatherData = { temp: null, condition: null, wind: null, humidity: null, precip: null };
+const securityEvents = JSON.parse(localStorage.getItem('securityEvents')) || [];
 
 // Map Initialization
 let map, markersLayer;
 if (document.getElementById('map')) {
-    map = L.map('map').setView([51.505, -0.09], 13); // Default: London
+    map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'dashboard.html': initializeDashboard(); break;
         case 'security.html': initializeSecurity(); break;
     }
+    simulateLiveData();
 });
 
 // Theme Toggle
@@ -32,10 +34,22 @@ function initializeThemeToggle() {
     const toggleBtn = document.getElementById('theme-toggle');
     const body = document.body;
     toggleBtn.addEventListener('click', () => {
-        body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+        body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
         localStorage.setItem('theme', body.dataset.theme);
+        toggleBtn.textContent = body.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode';
     });
-    body.dataset.theme = localStorage.getItem('theme') || 'light';
+    body.dataset.theme = localStorage.getItem('theme') || 'dark';
+    toggleBtn.textContent = body.dataset.theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+// Simulate Live Data (Bonus Feature)
+function simulateLiveData() {
+    setInterval(() => {
+        const v2vCount = document.getElementById('v2v-count');
+        if (v2vCount) v2vCount.textContent = Math.floor(Math.random() * 20) + 5;
+        const v2vSignal = document.getElementById('v2v-signal');
+        if (v2vSignal) v2vSignal.textContent = `${Math.floor(Math.random() * 100)}%`;
+    }, 5000);
 }
 
 // Home Page
@@ -61,12 +75,14 @@ function initializeHome() {
         trafficDensity: document.getElementById('traffic-density'),
         avgSpeed: document.getElementById('avg-speed'),
         incidentRate: document.getElementById('incident-rate'),
+        trafficVisual: document.getElementById('traffic-visual'),
         weatherSection: document.getElementById('weather-section'),
         refreshWeatherBtn: document.getElementById('refresh-weather-btn'),
         weatherTemp: document.getElementById('weather-temp'),
         weatherCondition: document.getElementById('weather-condition'),
         weatherWind: document.getElementById('weather-wind'),
-        weatherHumidity: document.getElementById('weather-humidity')
+        weatherHumidity: document.getElementById('weather-humidity'),
+        weatherPrecip: document.getElementById('weather-precip')
     };
     let visibility = { map: false, v2v: false, roadData: false, weather: false };
 
@@ -77,7 +93,7 @@ function initializeHome() {
     }, visibility));
     elements.safetyRulesBtn.addEventListener('click', () => elements.modal.style.display = 'block');
     elements.securityBtn.addEventListener('click', () => window.location.href = 'security.html');
-    elements.v2vBtn.addEventListener('click', () => toggleSection('v2v', elements.v2vSection, elements.v2vBtn, null, visibility));
+    elements.v2vBtn.addEventListener('click', () => toggleSection('v2v', elements.v2vSection, elements.v2vBtn, loadV2VMessages, visibility));
     elements.roadDataBtn.addEventListener('click', () => toggleSection('road-data', elements.roadDataSection, elements.roadDataBtn, updateRoadStats, visibility));
     elements.weatherBtn.addEventListener('click', () => toggleSection('weather', elements.weatherSection, elements.weatherBtn, fetchAndDisplayWeather, visibility));
     elements.closeModal.addEventListener('click', () => elements.modal.style.display = 'none');
@@ -94,16 +110,17 @@ function initializeHome() {
             fetchWeatherData(latitude, longitude);
             updateRoadStats();
             fetchAndDisplayWeather(latitude, longitude);
+            loadV2VMessages();
         })
         .catch(() => {
-            console.log('Geolocation failed, using default location');
-            fetchAndDisplayWeather(51.505, -0.09); // Default: London
+            console.log('Geolocation failed, using default');
+            fetchAndDisplayWeather(51.505, -0.09);
         });
 
     function toggleSection(type, container, btn, callback, vis) {
         vis[type] = !vis[type];
         container.classList.toggle('visible', vis[type]);
-        btn.textContent = vis[type] ? `Hide ${type.charAt(0).toUpperCase() + type.slice(1)}` : `${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        btn.textContent = vis[type] ? type.toUpperCase() : type.toUpperCase();
         if (vis[type] && callback) callback();
     }
 
@@ -119,8 +136,8 @@ function initializeHome() {
                 roadStats.avgSpeed = simulatedData.avgSpeed;
                 roadStats.incidentRate = simulatedData.incidentRate.toFixed(2);
                 updateRoadStats();
-                showNotification('Road data collected');
-                console.log('IoT Road Data:', simulatedData);
+                elements.trafficVisual.style.setProperty('--traffic-width', `${simulatedData.trafficDensity}%`);
+                showNotification('Road data updated');
             })
             .catch(() => showNotification('Error: Enable location', true));
     }
@@ -129,65 +146,50 @@ function initializeHome() {
         elements.trafficDensity.textContent = roadStats.trafficDensity || 'N/A';
         elements.avgSpeed.textContent = roadStats.avgSpeed || 'N/A';
         elements.incidentRate.textContent = roadStats.incidentRate || 'N/A';
+        elements.trafficVisual.style.setProperty('--traffic-width', `${roadStats.trafficDensity || 0}%`);
     }
 
     function fetchAndDisplayWeather(lat, lon) {
         if (!lat || !lon) {
             getCurrentPosition()
                 .then(position => fetchWeatherFromAPIs(position.coords.latitude, position.coords.longitude))
-                .catch(() => fetchWeatherFromAPIs(51.505, -0.09)); // Fallback to London
+                .catch(() => fetchWeatherFromAPIs(51.505, -0.09));
         } else {
             fetchWeatherFromAPIs(lat, lon);
         }
     }
 
     async function fetchWeatherFromAPIs(lat, lon) {
-        if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
-            showNotification('Invalid coordinates', true);
-            return;
-        }
-
         try {
-            // Fetch from OpenWeatherMap
             const openWeatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
-            if (!openWeatherResponse.ok) {
-                throw new Error(`OpenWeatherMap error: ${openWeatherResponse.status}`);
-            }
+            if (!openWeatherResponse.ok) throw new Error(`OpenWeatherMap: ${openWeatherResponse.status}`);
             const openWeatherData = await openWeatherResponse.json();
 
-            // Fetch from Open-Meteo (no API key required)
-            const openMeteoResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weathercode`);
-            if (!openMeteoResponse.ok) {
-                throw new Error(`Open-Meteo error: ${openMeteoResponse.status}`);
-            }
+            const openMeteoResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation`);
+            if (!openMeteoResponse.ok) throw new Error(`Open-Meteo: ${openMeteoResponse.status}`);
             const openMeteoData = await openMeteoResponse.json();
 
-            // Merge data
-            weatherData.temp = openWeatherData.main.temp; // OpenWeatherMap for temp
-            weatherData.condition = openWeatherData.weather[0].description; // OpenWeatherMap for condition
-            weatherData.wind = openWeatherData.wind.speed; // OpenWeatherMap for wind
-            weatherData.humidity = openMeteoData.current.relative_humidity_2m; // Open-Meteo for humidity
+            weatherData.temp = openWeatherData.main.temp;
+            weatherData.condition = openWeatherData.weather[0].description;
+            weatherData.wind = openWeatherData.wind.speed;
+            weatherData.humidity = openMeteoData.current.relative_humidity_2m;
+            weatherData.precip = openMeteoData.current.precipitation;
 
-            // Update UI
             elements.weatherTemp.textContent = weatherData.temp;
             elements.weatherCondition.textContent = weatherData.condition;
             elements.weatherWind.textContent = weatherData.wind;
             elements.weatherHumidity.textContent = weatherData.humidity;
-            showNotification('Weather updated from dual APIs');
+            elements.weatherPrecip.textContent = weatherData.precip;
+            showNotification('Weather refreshed');
         } catch (error) {
-            let errorMessage = 'Weather fetch error';
-            if (error.message.includes('401')) errorMessage = 'Invalid OpenWeatherMap API key';
-            else if (error.message.includes('429')) errorMessage = 'API rate limit exceeded';
-            else if (error.message.includes('network')) errorMessage = 'Network error';
-            showNotification(errorMessage, true);
-            console.error('Weather fetch error:', error);
-
-            // Fallback to default values if both APIs fail
-            elements.weatherTemp.textContent = 'N/A';
-            elements.weatherCondition.textContent = 'N/A';
-            elements.weatherWind.textContent = 'N/A';
-            elements.weatherHumidity.textContent = 'N/A';
+            showNotification(`Weather fetch error: ${error.message}`, true);
+            console.error(error);
+            Object.keys(weatherData).forEach(key => elements[`weather-${key}`].textContent = 'N/A');
         }
+    }
+
+    function loadV2VMessages() {
+        elements.v2vMessagesDiv.innerHTML = v2vMessages.map(msg => `<p>${msg.sender}: ${msg.text} <small>(${msg.timestamp})</small></p>`).join('');
     }
 }
 
@@ -206,7 +208,7 @@ function initializeReport() {
             e.target.reset();
             fetchWeatherData(position.coords.latitude, position.coords.longitude);
         } catch (error) {
-            showNotification('Error: Enable location services', true);
+            showNotification('Error: Enable location', true);
         }
     });
 }
@@ -223,20 +225,43 @@ function initializeSecurity() {
     const emergencyBtn = document.getElementById('emergency-btn');
     const trafficAlertBtn = document.getElementById('traffic-alert-btn');
     const trafficAlertsDiv = document.getElementById('traffic-alerts');
+    const securityEventsList = document.getElementById('security-events');
+    const sirenAudio = document.getElementById('siren-audio');
     const trafficAlerts = ["Heavy congestion on I-95", "Accident on Main St", "Road work on Hwy 101"];
+
     emergencyBtn.addEventListener('click', () => {
         if (confirm('Send emergency SOS?')) {
             getCurrentPosition()
-                .then(position => showNotification(`SOS sent from ${position.coords.latitude}, ${position.coords.longitude}`))
+                .then(position => {
+                    const event = { type: 'SOS', lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
+                    securityEvents.push(event);
+                    saveSecurityEvents();
+                    showNotification(`SOS sent from ${position.coords.latitude}, ${position.coords.longitude}`);
+                    sirenAudio.play();
+                    updateSecurityLog();
+                })
                 .catch(() => showNotification('Error: Enable location', true));
         }
     });
+
     trafficAlertBtn.addEventListener('click', () => {
         trafficAlertsDiv.style.display = trafficAlertsDiv.style.display === 'block' ? 'none' : 'block';
         if (trafficAlertsDiv.style.display === 'block') {
             trafficAlertsDiv.innerHTML = '<h4>Live Traffic Updates</h4>' + trafficAlerts.map(alert => `<p>${alert}</p>`).join('');
         }
     });
+
+    updateSecurityLog();
+    setInterval(() => {
+        const randomEvent = { type: 'Patrol Check', lat: 51.5 + Math.random(), lng: -0.09 + Math.random(), timestamp: new Date().toISOString() };
+        securityEvents.push(randomEvent);
+        saveSecurityEvents();
+        updateSecurityLog();
+    }, 30000); // Simulate security events every 30s
+
+    function updateSecurityLog() {
+        securityEventsList.innerHTML = securityEvents.slice(-10).map(event => `<li>${event.type} at ${event.lat.toFixed(4)}, ${event.lng.toFixed(4)} - ${new Date(event.timestamp).toLocaleString()}</li>`).join('');
+    }
 }
 
 // Helper Functions
@@ -246,6 +271,14 @@ function getCurrentPosition() {
 
 function saveIncidents() {
     localStorage.setItem('incidents', JSON.stringify(incidents));
+}
+
+function saveV2VMessages() {
+    localStorage.setItem('v2vMessages', JSON.stringify(v2vMessages));
+}
+
+function saveSecurityEvents() {
+    localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
 }
 
 function loadIncidentsOnMap() {
@@ -262,7 +295,7 @@ function updateIncidentsList() {
     if (!list) return;
     const activeFilters = Array.from(document.querySelectorAll('.filter:checked')).map(cb => cb.value);
     list.innerHTML = incidents
-        .filter(incident => activeFilters.includes(incident.type))
+        .filter(incident => activeFilters.length === 0 || activeFilters.includes(incident.type))
         .map(incident => `
             <li data-lat="${incident.lat}" data-lng="${incident.lng}">
                 <strong>${incident.type}</strong><br>${incident.description}<br><small>${new Date(incident.timestamp).toLocaleString()}</small>
@@ -276,7 +309,7 @@ function updateIncidentsList() {
 async function fetchWeatherData(lat, lon) {
     try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
-        if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
+        if (!response.ok) throw new Error(`Weather API: ${response.status}`);
         const data = await response.json();
         const weather = data.weather[0].main.toLowerCase();
         if (weather.includes('rain') || weather.includes('snow') || data.wind.speed > 15) {
@@ -314,36 +347,37 @@ function updateSafetyStatus() {
     const status = document.getElementById('safety-status');
     if (!status) return;
     const recentHazards = incidents.filter(i => new Date(i.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length;
-    status.textContent = recentHazards > 5 ? 'High Risk Area' : recentHazards > 0 ? 'Moderate Risk' : 'Safe Conditions';
-    status.style.color = recentHazards > 5 ? '#e74c3c' : recentHazards > 0 ? '#f1c40f' : '#27ae60';
+    status.textContent = recentHazards > 5 ? 'High Risk Zone' : recentHazards > 0 ? 'Moderate Risk' : 'Safe Zone';
+    status.style.backgroundColor = recentHazards > 5 ? '#ff1744' : recentHazards > 0 ? '#6200ea' : '#00c853';
 }
 
 function showNotification(message, isError = false) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
-    notification.style.backgroundColor = isError ? '#e74c3c' : '#27ae60';
+    notification.style.backgroundColor = isError ? '#ff1744' : '#00c853';
     notification.style.display = 'block';
-    setTimeout(() => notification.style.display = 'none', 3000);
+    setTimeout(() => notification.style.display = 'none', 4000);
 }
 
 function sendV2VMessage(message, messagesDiv) {
     if (!message.trim()) return;
-    v2vMessages.push({ text: message, timestamp: new Date().toLocaleTimeString(), sender: 'You' });
-    messagesDiv.innerHTML = v2vMessages.map(msg => `<p>${msg.sender}: ${msg.text} <small>(${msg.timestamp})</small></p>`).join('');
+    const msg = { text: message, timestamp: new Date().toLocaleTimeString(), sender: 'You' };
+    v2vMessages.push(msg);
+    saveV2VMessages();
+    messagesDiv.innerHTML = v2vMessages.map(m => `<p>${m.sender}: ${m.text} <small>(${m.timestamp})</small></p>`).join('');
     document.getElementById('v2v-input').value = '';
-    showNotification('Message sent to nearby vehicles');
-    console.log('IoT V2V Broadcast:', message);
+    showNotification('Message broadcasted');
 }
 
 // URL Parameters
 if (window.location.search && map) {
     const params = new URLSearchParams(window.location.search);
-    const lat = params.get('lat'), lng = params.get('lng');
+    const lat = parseFloat(params.get('lat')), lng = parseFloat(params.get('lng'));
     if (lat && lng) {
         map.setView([lat, lng], 15);
         fetchWeatherData(lat, lng);
         document.getElementById('map-container').classList.add('visible');
-        document.getElementById('toggle-map-btn').textContent = 'Hide Map';
+        document.getElementById('toggle-map-btn').textContent = 'MAP';
         map.invalidateSize();
         loadIncidentsOnMap();
         updateSafetyStatus();

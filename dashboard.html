@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <video autoplay muted loop id="traffic-video">
+        <source src="assets/traffic-video.mp4" type="video/mp4">
+    </video>
+
     <nav class="navbar">
         <div class="logo">
             <img src="assets/logo.png" alt="NjiaSafe Logo" class="logo-img">
@@ -14,29 +18,29 @@
         </div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="report.html">Report Incident</a></li>
+            <li><a href="report.html">Report</a></li>
             <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="security.html">Security</a></li>
+            <li><button id="theme-toggle" class="theme-toggle-btn">Dark Mode</button></li>
         </ul>
     </nav>
 
     <div class="container">
-        <div class="dashboard">
+        <header>
             <h2>Safety Dashboard</h2>
-            <div class="search-bar">
-                <input type="text" id="location-search" placeholder="Search location...">
-                <button id="search-btn">Search</button>
-            </div>
+            <p>Track incidents and road conditions in real time.</p>
+        </header>
+        <div class="dashboard-content">
+            <input type="text" id="location-search" placeholder="Search location...">
+            <button id="search-btn">Search</button>
             <div class="filters">
-                <h3>Filter Incidents</h3>
-                <label><input type="checkbox" class="filter" value="pothole" checked> Potholes</label>
                 <label><input type="checkbox" class="filter" value="accident" checked> Accidents</label>
-                <label><input type="checkbox" class="filter" value="congestion" checked> Congestion</label>
+                <label><input type="checkbox" class="filter" value="hazard" checked> Hazards</label>
+                <label><input type="checkbox" class="filter" value="traffic" checked> Traffic</label>
                 <label><input type="checkbox" class="filter" value="weather" checked> Weather</label>
+                <label><input type="checkbox" class="filter" value="security" checked> Security</label>
             </div>
-            <div class="incidents-list">
-                <h3>Recent Reports</h3>
-                <ul id="incident-list"></ul>
-            </div>
+            <ul id="incident-list"></ul>
         </div>
     </div>
 
