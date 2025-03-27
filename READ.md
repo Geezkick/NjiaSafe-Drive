@@ -1,14 +1,15 @@
-# NjiaSafe Drive
+# NjiaSafe Drive - Smart Road System
 
-A cutting-edge web app for road safety and vehicle connectivity.
+NjiaSafe Drive web app for road safety and smart connectivity.
 
 ## Features
-- **Modern Design**: Black/white theme toggle, sleek UI with animations.
-- **Home Page**: Map, V2V communication, safety rules, advert.
+- **Modern UI**: Black/white theme toggle, professional design with animations.
+- **Smart Road Data**: Real-time traffic density, speed, and incident stats.
+- **V2V Communication**: IoT-simulated vehicle messaging.
+- **Home Page**: Interactive map, V2V, road data, safety rules, advert.
 - **Report Page**: Incident reporting with geolocation.
-- **Dashboard**: Incident filtering and search.
-- **Security Page**: CCTV, protocols, SOS, traffic alerts.
-- **V2V Communication**: IoT-integrated vehicle messaging.
+- **Dashboard**: Filterable incident list and search.
+- **Security Page**: CCTV, SOS, traffic alerts.
 
 ## Setup
 1. Replace `YOUR_OPENWEATHERMAP_API_KEY` in `script.js`.

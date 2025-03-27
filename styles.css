@@ -9,6 +9,8 @@
     --warning: #f1c40f;
     --success: #27ae60;
     --navbar-bg: rgba(44,62,80,0.95);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
 }
 
 [data-theme="dark"] {
@@ -18,9 +20,6 @@
     --shadow: 0 6px 20px rgba(255,255,255,0.05);
     --primary: #5dade2;
     --primary-hover: #4d9cd6;
-    --danger: #e74c3c;
-    --warning: #f4d03f;
-    --success: #2ecc71;
     --navbar-bg: rgba(20,20,20,0.95);
 }
 
@@ -32,12 +31,10 @@
 }
 
 body {
-    background-color: var(--bg-color);
+    background: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
-    position: relative;
-    overflow-x: hidden;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 /* Background Video */
@@ -102,7 +99,7 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .nav-links a:hover, .nav-links a.active, .theme-toggle-btn:hover {
@@ -122,7 +119,7 @@ header {
     text-align: center;
     padding: 40px;
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     animation: fadeIn 1s ease-in;
 }
@@ -154,7 +151,7 @@ header p {
     cursor: pointer;
     font-size: 16px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .action-btn:hover {
@@ -163,17 +160,18 @@ header p {
     box-shadow: 0 4px 12px rgba(52,152,219,0.4);
 }
 
-/* Map */
+/* Main Content */
 .main-content {
     margin-top: 30px;
     display: grid;
     gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
+/* Map */
 .map-container {
-    position: relative;
     background: white;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: var(--shadow);
     max-height: 0;
@@ -202,21 +200,21 @@ header p {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* V2V Section */
-.v2v-section {
+/* V2V, Road Data, Weather Sections */
+.v2v-section, .road-data-section, .weather-section {
     background: var(--card-bg);
     padding: 20px;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     display: none;
     animation: slideIn 0.5s ease-out;
 }
 
-.v2v-section.visible {
+.v2v-section.visible, .road-data-section.visible, .weather-section.visible {
     display: block;
 }
 
-.v2v-messages {
+.v2v-messages, #road-stats, #weather-info {
     max-height: 200px;
     overflow-y: auto;
     margin-bottom: 15px;
@@ -241,18 +239,28 @@ header p {
     margin-right: 10px;
 }
 
-#v2v-send {
+#v2v-send, #collect-data-btn, #refresh-weather-btn {
     padding: 10px 20px;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
-#v2v-send:hover {
+#v2v-send:hover, #collect-data-btn:hover, #refresh-weather-btn:hover {
     background: var(--primary-hover);
+}
+
+/* Road Data and Weather */
+#road-stats p, #weather-info p {
+    padding: 8px 0;
+    font-weight: 500;
+}
+
+#road-stats span, #weather-info span {
+    color: var(--primary);
 }
 
 /* Modal */
@@ -271,7 +279,7 @@ header p {
     background: var(--card-bg);
     margin: 10% auto;
     padding: 30px;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     width: 90%;
     max-width: 600px;
     box-shadow: var(--shadow);
@@ -283,7 +291,7 @@ header p {
     font-size: 28px;
     cursor: pointer;
     color: #7f8c8d;
-    transition: color 0.3s;
+    transition: var(--transition);
 }
 
 .close-modal:hover, .close-advert:hover {
@@ -299,11 +307,11 @@ header p {
     background: linear-gradient(135deg, var(--warning), #e67e22);
     color: var(--text-color);
     padding: 20px;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     z-index: 15;
     animation: float 3s ease-in-out infinite;
-    transition: transform 0.3s;
+    transition: var(--transition);
 }
 
 .floating-advert:hover {
@@ -343,4 +351,5 @@ header p {
     .header-buttons { flex-direction: column; }
     .navbar { flex-direction: column; gap: 10px; }
     .nav-links { flex-direction: column; gap: 10px; }
+    .main-content { grid-template-columns: 1fr; }
 }

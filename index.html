@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjiaSafe Drive - Home</title>
+    <title>NjiaSafe Drive - Smart Road System</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
@@ -29,13 +29,15 @@
 
     <div class="container">
         <header>
-            <h2>Next-Gen Road Safety</h2>
-            <p>Connected. Secure. Safe.</p>
+            <h2>Smart Road Safety Network</h2>
+            <p>Real-time connectivity for a safer tomorrow.</p>
             <div class="header-buttons">
                 <button id="toggle-map-btn" class="action-btn">Show Map</button>
                 <button id="safety-rules-btn" class="action-btn">Safety Rules</button>
                 <button id="security-btn" class="action-btn">Road Security</button>
                 <button id="v2v-btn" class="action-btn">V2V Network</button>
+                <button id="road-data-btn" class="action-btn">Road Data</button>
+                <button id="weather-btn" class="action-btn">Weather</button>
             </div>
         </header>
 
@@ -50,8 +52,28 @@
             <div class="v2v-section" id="v2v-section">
                 <h3>Vehicle-to-Vehicle Network</h3>
                 <div id="v2v-messages" class="v2v-messages"></div>
-                <input type="text" id="v2v-input" placeholder="Send a message to nearby vehicles">
+                <input type="text" id="v2v-input" placeholder="Send message to nearby vehicles">
                 <button id="v2v-send">Send</button>
+            </div>
+
+            <div class="road-data-section" id="road-data-section">
+                <h3>Real-Time Road Statistics</h3>
+                <div id="road-stats">
+                    <p>Traffic Density: <span id="traffic-density">N/A</span></p>
+                    <p>Average Speed: <span id="avg-speed">N/A</span> km/h</p>
+                    <p>Incident Rate: <span id="incident-rate">N/A</span></p>
+                </div>
+                <button id="collect-data-btn">Collect Data Now</button>
+            </div>
+
+            <div class="weather-section" id="weather-section">
+                <h3>Current Weather Conditions</h3>
+                <div id="weather-info">
+                    <p>Temperature: <span id="weather-temp">N/A</span>°C</p>
+                    <p>Condition: <span id="weather-condition">N/A</span></p>
+                    <p>Wind Speed: <span id="weather-wind">N/A</span> m/s</p>
+                </div>
+                <button id="refresh-weather-btn">Refresh Weather</button>
             </div>
         </div>
     </div>
