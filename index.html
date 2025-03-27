@@ -1,0 +1,63 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjiaSafe Drive</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NjiaSafe Drive</h1>
+            <p>Real-time Road Safety Monitoring</p>
+            <div class="search-bar">
+                <input type="text" id="location-search" placeholder="Search location...">
+                <button id="search-btn">Search</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="filter-controls">
+                    <h3>Filter Incidents</h3>
+                    <label><input type="checkbox" class="filter" value="pothole" checked> Potholes</label>
+                    <label><input type="checkbox" class="filter" value="accident" checked> Accidents</label>
+                    <label><input type="checkbox" class="filter" value="congestion" checked> Congestion</label>
+                    <label><input type="checkbox" class="filter" value="weather" checked> Weather</label>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="report-form">
+                    <h2>Report Incident</h2>
+                    <form id="incident-form">
+                        <select id="incident-type" required>
+                            <option value="">Select Incident Type</option>
+                            <option value="pothole">Pothole</option>
+                            <option value="accident">Accident</option>
+                            <option value="congestion">Traffic Congestion</option>
+                            <option value="weather">Weather Hazard</option>
+                        </select>
+                        <textarea id="description" placeholder="Description" required></textarea>
+                        <button type="submit">Submit Report</button>
+                    </form>
+                </div>
+
+                <div class="incidents-list">
+                    <h2>Recent Reports</h2>
+                    <ul id="incident-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification" id="notification"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
