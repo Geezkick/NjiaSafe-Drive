@@ -3,7 +3,7 @@ const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace with your API key
 let map, markersLayer;
 const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
 
-// Initialize map on home page
+// Initialize map on home page if it exists
 if (document.getElementById('map')) {
     map = L.map('map').setView([51.505, -0.09], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -27,8 +27,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Home page logic
 function initializeHome() {
-    loadIncidentsOnMap();
-    updateSafetyStatus();
+    const toggleBtn = document.getElementById('toggle-map-btn');
+    const mapContainer = document.getElementById('map-container');
+    let isMapVisible = false;
+
+    toggleBtn.addEventListener('click', () => {
+        isMapVisible = !isMapVisible;
+        mapContainer.classList.toggle('visible', isMapVisible);
+        toggleBtn.textContent = isMapVisible ? 'Hide Map' : 'Show Map';
+        if (isMapVisible) {
+            map.invalidateSize(); // Ensure map renders correctly after showing
+            loadIncidentsOnMap();
+            updateSafetyStatus();
+        }
+    });
+
     getCurrentPosition()
         .then(position => {
             map.setView([position.coords.latitude, position.coords.longitude], 13);
@@ -141,7 +154,9 @@ async function fetchWeatherData(lat, lon) {
             };
             incidents.push(weatherIncident);
             saveIncidents();
-            if (map) loadIncidentsOnMap();
+            if (map && document.getElementById('map-container').classList.contains('visible')) {
+                loadIncidentsOnMap();
+            }
             updateSafetyStatus();
             showNotification('Weather hazard detected');
         }
@@ -206,5 +221,10 @@ if (window.location.search && map) {
     if (lat && lng) {
         map.setView([lat, lng], 15);
         fetchWeatherData(lat, lng);
+        document.getElementById('map-container').classList.add('visible');
+        document.getElementById('toggle-map-btn').textContent = 'Hide Map';
+        map.invalidateSize();
+        loadIncidentsOnMap();
+        updateSafetyStatus();
     }
 }
