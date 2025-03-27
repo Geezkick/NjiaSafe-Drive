@@ -324,6 +324,14 @@ header p {
     margin: 10px auto;
     display: block;
 }
+#weather-info p {
+    padding: 8px 0;
+    font-weight: 500;
+}
+
+#weather-info span {
+    color: var(--primary);
+}
 
 /* Notification */
 .notification {

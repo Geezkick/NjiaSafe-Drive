@@ -1,14 +1,14 @@
 // Constants
-const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace with your API key
+const OPENWEATHERMAP_API_KEY = 'your_openweathermap_api_key_here'; // Replace with your OpenWeatherMap API key
 const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
 const v2vMessages = [];
 const roadStats = { trafficDensity: 0, avgSpeed: 0, incidentRate: 0 };
-const weatherData = { temp: null, condition: null, wind: null };
+const weatherData = { temp: null, condition: null, wind: null, humidity: null };
 
 // Map Initialization
 let map, markersLayer;
 if (document.getElementById('map')) {
-    map = L.map('map').setView([51.505, -0.09], 13);
+    map = L.map('map').setView([51.505, -0.09], 13); // Default: London
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -65,14 +65,10 @@ function initializeHome() {
         refreshWeatherBtn: document.getElementById('refresh-weather-btn'),
         weatherTemp: document.getElementById('weather-temp'),
         weatherCondition: document.getElementById('weather-condition'),
-        weatherWind: document.getElementById('weather-wind')
+        weatherWind: document.getElementById('weather-wind'),
+        weatherHumidity: document.getElementById('weather-humidity')
     };
-    let visibility = {
-        map: false,
-        v2v: false,
-        roadData: false,
-        weather: false
-    };
+    let visibility = { map: false, v2v: false, roadData: false, weather: false };
 
     elements.toggleBtn.addEventListener('click', () => toggleSection('map', elements.mapContainer, elements.toggleBtn, () => {
         map.invalidateSize();
@@ -93,12 +89,16 @@ function initializeHome() {
 
     getCurrentPosition()
         .then(position => {
-            map.setView([position.coords.latitude, position.coords.longitude], 13);
-            fetchWeatherData(position.coords.latitude, position.coords.longitude);
+            const { latitude, longitude } = position.coords;
+            map.setView([latitude, longitude], 13);
+            fetchWeatherData(latitude, longitude);
             updateRoadStats();
-            fetchAndDisplayWeather(position.coords.latitude, position.coords.longitude);
+            fetchAndDisplayWeather(latitude, longitude);
         })
-        .catch(() => console.log('Using default location'));
+        .catch(() => {
+            console.log('Geolocation failed, using default location');
+            fetchAndDisplayWeather(51.505, -0.09); // Default: London
+        });
 
     function toggleSection(type, container, btn, callback, vis) {
         vis[type] = !vis[type];
@@ -134,27 +134,59 @@ function initializeHome() {
     function fetchAndDisplayWeather(lat, lon) {
         if (!lat || !lon) {
             getCurrentPosition()
-                .then(position => fetchWeatherForDisplay(position.coords.latitude, position.coords.longitude))
-                .catch(() => showNotification('Error: Enable location', true));
+                .then(position => fetchWeatherFromAPIs(position.coords.latitude, position.coords.longitude))
+                .catch(() => fetchWeatherFromAPIs(51.505, -0.09)); // Fallback to London
         } else {
-            fetchWeatherForDisplay(lat, lon);
+            fetchWeatherFromAPIs(lat, lon);
         }
     }
 
-    async function fetchWeatherForDisplay(lat, lon) {
+    async function fetchWeatherFromAPIs(lat, lon) {
+        if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon)) {
+            showNotification('Invalid coordinates', true);
+            return;
+        }
+
         try {
-            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
-            const data = await response.json();
-            weatherData.temp = data.main.temp;
-            weatherData.condition = data.weather[0].description;
-            weatherData.wind = data.wind.speed;
+            // Fetch from OpenWeatherMap
+            const openWeatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
+            if (!openWeatherResponse.ok) {
+                throw new Error(`OpenWeatherMap error: ${openWeatherResponse.status}`);
+            }
+            const openWeatherData = await openWeatherResponse.json();
+
+            // Fetch from Open-Meteo (no API key required)
+            const openMeteoResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weathercode`);
+            if (!openMeteoResponse.ok) {
+                throw new Error(`Open-Meteo error: ${openMeteoResponse.status}`);
+            }
+            const openMeteoData = await openMeteoResponse.json();
+
+            // Merge data
+            weatherData.temp = openWeatherData.main.temp; // OpenWeatherMap for temp
+            weatherData.condition = openWeatherData.weather[0].description; // OpenWeatherMap for condition
+            weatherData.wind = openWeatherData.wind.speed; // OpenWeatherMap for wind
+            weatherData.humidity = openMeteoData.current.relative_humidity_2m; // Open-Meteo for humidity
+
+            // Update UI
             elements.weatherTemp.textContent = weatherData.temp;
             elements.weatherCondition.textContent = weatherData.condition;
             elements.weatherWind.textContent = weatherData.wind;
-            showNotification('Weather updated');
+            elements.weatherHumidity.textContent = weatherData.humidity;
+            showNotification('Weather updated from dual APIs');
         } catch (error) {
-            showNotification('Weather fetch error', true);
+            let errorMessage = 'Weather fetch error';
+            if (error.message.includes('401')) errorMessage = 'Invalid OpenWeatherMap API key';
+            else if (error.message.includes('429')) errorMessage = 'API rate limit exceeded';
+            else if (error.message.includes('network')) errorMessage = 'Network error';
+            showNotification(errorMessage, true);
             console.error('Weather fetch error:', error);
+
+            // Fallback to default values if both APIs fail
+            elements.weatherTemp.textContent = 'N/A';
+            elements.weatherCondition.textContent = 'N/A';
+            elements.weatherWind.textContent = 'N/A';
+            elements.weatherHumidity.textContent = 'N/A';
         }
     }
 }
@@ -243,7 +275,8 @@ function updateIncidentsList() {
 
 async function fetchWeatherData(lat, lon) {
     try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHERMAP_API_KEY}&units=metric`);
+        if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
         const data = await response.json();
         const weather = data.weather[0].main.toLowerCase();
         if (weather.includes('rain') || weather.includes('snow') || data.wind.speed > 15) {
