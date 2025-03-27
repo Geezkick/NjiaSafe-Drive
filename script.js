@@ -100,6 +100,13 @@ function initializeHome() {
     const elements = {
         toggleBtn: document.getElementById('toggle-map-btn'),
         mapContainer: document.getElementById('map-container'),
+        navigationBtn: document.getElementById('navigation-btn'),
+        shortestRouteBtn: document.getElementById('shortest-route-btn'),
+        lessTrafficBtn: document.getElementById('less-traffic-btn'),
+        safestRouteBtn: document.getElementById('safest-route-btn'),
+        gasStationBtn: document.getElementById('gas-station-btn'),
+        garageBtn: document.getElementById('garage-btn'),
+        marketBtn: document.getElementById('market-btn'),
         safetyRulesBtn: document.getElementById('safety-rules-btn'),
         securityBtn: document.getElementById('security-btn'),
         v2vBtn: document.getElementById('v2v-btn'),
@@ -165,6 +172,12 @@ function initializeHome() {
     if (elements.toggleBtn) elements.toggleBtn.addEventListener('click', () => toggleSection('map', elements.mapContainer, elements.toggleBtn, () => {
         if (map) { map.invalidateSize(); loadIncidentsOnMap(); updateSafetyStatus(); }
     }, visibility));
+    if (elements.shortestRouteBtn) elements.shortestRouteBtn.addEventListener('click', () => navigate('shortest', visibility));
+    if (elements.lessTrafficBtn) elements.lessTrafficBtn.addEventListener('click', () => navigate('less-traffic', visibility));
+    if (elements.safestRouteBtn) elements.safestRouteBtn.addEventListener('click', () => navigate('safest', visibility));
+    if (elements.gasStationBtn) elements.gasStationBtn.addEventListener('click', () => findNearest('gas_station', visibility));
+    if (elements.garageBtn) elements.garageBtn.addEventListener('click', () => findNearest('garage', visibility));
+    if (elements.marketBtn) elements.marketBtn.addEventListener('click', () => findNearest('supermarket', visibility));
     if (elements.safetyRulesBtn) elements.safetyRulesBtn.addEventListener('click', () => elements.modal && (elements.modal.style.display = 'block'));
     if (elements.securityBtn) elements.securityBtn.addEventListener('click', () => window.location.href = 'security.html');
     if (elements.v2vBtn) elements.v2vBtn.addEventListener('click', () => toggleSection('v2v', elements.v2vSection, elements.v2vBtn, loadV2VMessages, visibility));
@@ -244,6 +257,65 @@ function initializeHome() {
             const btn = document.getElementById(`${key}-btn`);
             if (btn) btn.textContent = key.toUpperCase();
         });
+    }
+
+    async function navigate(type, vis) {
+        if (userPlan !== 'premium') {
+            showNotification('Upgrade to Premium for navigation', true);
+            elements.subModal.style.display = 'block';
+            return;
+        }
+        try {
+            const position = await getCurrentPosition();
+            const { latitude, longitude } = position.coords;
+            if (map) {
+                map.setView([latitude, longitude], 13);
+                markersLayer.clearLayers();
+                const destination = [latitude + 0.05, longitude + 0.05]; // Simulated destination
+                let routePoints;
+                switch (type) {
+                    case 'shortest':
+                        routePoints = [[latitude, longitude], destination];
+                        break;
+                    case 'less-traffic':
+                        routePoints = [[latitude, longitude], [latitude + 0.02, longitude + 0.02], destination];
+                        break;
+                    case 'safest':
+                        routePoints = [[latitude, longitude], [latitude + 0.03, longitude - 0.03], destination];
+                        break;
+                }
+                L.polyline(routePoints, { color: '#00cc99' }).addTo(markersLayer);
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} route calculated`);
+                toggleSection('map', elements.mapContainer, elements.toggleBtn, () => map.invalidateSize(), vis);
+            }
+        } catch (error) {
+            showNotification('Location access required', true);
+        }
+    }
+
+    async function findNearest(type, vis) {
+        if (userPlan !== 'premium') {
+            showNotification('Upgrade to Premium for this feature', true);
+            elements.subModal.style.display = 'block';
+            return;
+        }
+        try {
+            const position = await getCurrentPosition();
+            const { latitude, longitude } = position.coords;
+            if (map) {
+                map.setView([latitude, longitude], 13);
+                markersLayer.clearLayers();
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${type}&format=json&limit=3&lat=${latitude}&lon=${longitude}`);
+                const locations = await response.json();
+                locations.forEach(loc => {
+                    L.marker([loc.lat, loc.lon]).bindPopup(loc.display_name).addTo(markersLayer);
+                });
+                showNotification(`Nearest ${type.replace('_', ' ')}s located`);
+                toggleSection('map', elements.mapContainer, elements.toggleBtn, () => map.invalidateSize(), vis);
+            }
+        } catch (error) {
+            showNotification('Location access required', true);
+        }
     }
 
     function collectRoadData() {
@@ -469,7 +541,7 @@ function initializeHome() {
     }
 }
 
-// Report Page (Enhanced with Emergency Services)
+// Report Page (Enhanced with SOS)
 function initializeReport() {
     const form = document.createElement('form');
     form.id = 'incident-form';
@@ -484,6 +556,7 @@ function initializeReport() {
         </select>
         <textarea id="description" placeholder="Describe the incident"></textarea>
         <button type="submit" class="premium-btn">Submit Report</button>
+        <button id="emergency-btn">SOS</button>
         <button id="back-from-report" class="back-btn">Back</button>
     `;
     document.body.appendChild(form);
@@ -509,6 +582,27 @@ function initializeReport() {
             showNotification('Enable location services', true);
         }
     });
+
+    const sosBtn = document.getElementById('emergency-btn');
+    if (sosBtn) {
+        sosBtn.addEventListener('click', () => {
+            if (confirm('Send SOS?')) {
+                sosBtn.classList.add('blinking');
+                getCurrentPosition()
+                    .then(position => {
+                        const event = { type: 'Emergency SOS', lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
+                        securityEvents.push(event);
+                        localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
+                        showNotification(`SOS sent from ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                        setTimeout(() => sosBtn.classList.remove('blinking'), 5000);
+                    })
+                    .catch(() => {
+                        showNotification('Location required for SOS', true);
+                        setTimeout(() => sosBtn.classList.remove('blinking'), 5000);
+                    });
+            }
+        });
+    }
     document.getElementById('back-from-report')?.addEventListener('click', () => window.location.href = 'index.html');
 }
 
@@ -520,26 +614,30 @@ function initializeDashboard() {
     updateIncidentsList();
 }
 
-// Security Page (Red SOS)
+// Security Page
 function initializeSecurity() {
     const emergencyBtn = document.createElement('button');
     emergencyBtn.id = 'emergency-btn';
     emergencyBtn.textContent = 'SOS';
     emergencyBtn.style.background = '#ff4d4d';
-    emergencyBtn.style.color = '#fff';
     emergencyBtn.className = 'premium-btn';
     document.body.appendChild(emergencyBtn);
 
     emergencyBtn.addEventListener('click', () => {
         if (confirm('Send SOS?')) {
+            emergencyBtn.classList.add('blinking');
             getCurrentPosition()
                 .then(position => {
                     const event = { type: 'Emergency SOS', lat: position.coords.latitude, lng: position.coords.longitude, timestamp: new Date().toISOString() };
                     securityEvents.push(event);
                     localStorage.setItem('securityEvents', JSON.stringify(securityEvents));
                     showNotification(`SOS sent from ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                    setTimeout(() => emergencyBtn.classList.remove('blinking'), 5000);
                 })
-                .catch(() => showNotification('Location required for SOS', true));
+                .catch(() => {
+                    showNotification('Location required for SOS', true);
+                    setTimeout(() => emergencyBtn.classList.remove('blinking'), 5000);
+                });
         }
     });
 }

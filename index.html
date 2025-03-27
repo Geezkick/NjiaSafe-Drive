@@ -37,18 +37,37 @@
         </header>
 
         <div class="control-panel">
-            <button id="toggle-map-btn" class="action-btn premium-btn" data-tooltip="Interactive Map"><span>Map</span></button>
-            <button id="safety-rules-btn" class="action-btn premium-btn" data-tooltip="Safety Rules"><span>Rules</span></button>
-            <button id="security-btn" class="action-btn premium-btn" data-tooltip="Security Hub"><span>Security</span></button>
-            <button id="v2v-btn" class="action-btn premium-btn" data-tooltip="V2V Comms"><span>V2V</span></button>
-            <button id="road-data-btn" class="action-btn premium-btn" data-tooltip="Road Insights"><span>Data</span></button>
-            <button id="weather-btn" class="action-btn premium-btn" data-tooltip="Weather Updates"><span>Weather</span></button>
-            <button id="social-feed-btn" class="action-btn premium-btn" data-tooltip="Community Feed"><span>Feed</span></button>
-            <button id="groups-btn" class="action-btn premium-btn" data-tooltip="Driver Groups"><span>Groups</span></button>
-            <button id="schedule-btn" class="action-btn premium-btn" data-tooltip="Schedule Alerts"><span>Schedule</span></button>
-            <button id="analytics-btn" class="action-btn premium-btn" data-tooltip="Analytics Suite"><span>Analytics</span></button>
-            <button id="first-aid-btn" class="action-btn premium-btn" data-tooltip="First Aid Knowledge"><span>First Aid</span></button>
-            <button id="hospital-btn" class="action-btn premium-btn" data-tooltip="Nearby Hospitals"><span>Hospitals</span></button>
+            <div class="button-cluster">
+                <button id="toggle-map-btn" class="action-btn premium-btn" data-tooltip="Interactive Map"><span>Map</span></button>
+                <button id="navigation-btn" class="action-btn premium-btn" data-tooltip="Navigation Options"><span>Navigate</span></button>
+                <div class="sub-menu" id="navigation-sub-menu">
+                    <button id="shortest-route-btn" class="sub-btn" data-tooltip="Shortest Route">Shortest</button>
+                    <button id="less-traffic-btn" class="sub-btn" data-tooltip="Less Traffic">Low Traffic</button>
+                    <button id="safest-route-btn" class="sub-btn" data-tooltip="Safest Route">Safest</button>
+                    <button id="gas-station-btn" class="sub-btn" data-tooltip="Nearest Gas Station">Gas</button>
+                    <button id="garage-btn" class="sub-btn" data-tooltip="Nearest Garage">Garage</button>
+                    <button id="market-btn" class="sub-btn" data-tooltip="Nearest Market">Market</button>
+                </div>
+            </div>
+            <div class="button-cluster">
+                <button id="safety-rules-btn" class="action-btn premium-btn" data-tooltip="Safety Rules"><span>Rules</span></button>
+                <button id="security-btn" class="action-btn premium-btn" data-tooltip="Security Hub"><span>Security</span></button>
+                <button id="v2v-btn" class="action-btn premium-btn" data-tooltip="V2V Comms"><span>V2V</span></button>
+            </div>
+            <div class="button-cluster">
+                <button id="road-data-btn" class="action-btn premium-btn" data-tooltip="Road Insights"><span>Data</span></button>
+                <button id="weather-btn" class="action-btn premium-btn" data-tooltip="Weather Updates"><span>Weather</span></button>
+            </div>
+            <div class="button-cluster">
+                <button id="social-feed-btn" class="action-btn premium-btn" data-tooltip="Community Feed"><span>Feed</span></button>
+                <button id="groups-btn" class="action-btn premium-btn" data-tooltip="Driver Groups"><span>Groups</span></button>
+                <button id="schedule-btn" class="action-btn premium-btn" data-tooltip="Schedule Alerts"><span>Schedule</span></button>
+                <button id="analytics-btn" class="action-btn premium-btn" data-tooltip="Analytics Suite"><span>Analytics</span></button>
+            </div>
+            <div class="button-cluster">
+                <button id="first-aid-btn" class="action-btn premium-btn" data-tooltip="First Aid Knowledge"><span>First Aid</span></button>
+                <button id="hospital-btn" class="action-btn premium-btn" data-tooltip="Nearby Hospitals"><span>Hospitals</span></button>
+            </div>
         </div>
 
         <div class="main-content">
@@ -202,7 +221,7 @@
                     <p>$19.99/month</p>
                     <ul>
                         <li>All Pro Features</li>
-                        <li>Scheduling & Analytics</li>
+                        <li>Navigation, Scheduling & Analytics</li>
                         <li>First Aid & Hospitals</li>
                     </ul>
                     <button class="subscribe-btn" data-plan="premium">Select</button>

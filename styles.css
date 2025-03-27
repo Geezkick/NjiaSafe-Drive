@@ -161,6 +161,10 @@ header p {
     z-index: 50;
 }
 
+.button-cluster {
+    position: relative;
+}
+
 .action-btn.premium-btn {
     padding: 15px 30px;
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
@@ -216,6 +220,41 @@ header p {
 .action-btn:hover::before {
     opacity: 1;
     visibility: visible;
+}
+
+.sub-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 10px;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 60;
+}
+
+.button-cluster:hover .sub-menu {
+    display: flex;
+}
+
+.sub-btn {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: var(--secondary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.sub-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.05);
 }
 
 .main-content {
@@ -475,10 +514,67 @@ header p {
     transform: scale(1.05);
 }
 
+/* Report Page Specific Styles */
+#incident-form {
+    max-width: 600px;
+    margin: 120px auto;
+    padding: 30px;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+#incident-form h3 {
+    font-size: 28px;
+    color: var(--secondary);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#incident-form select, #incident-form textarea {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+#incident-form textarea {
+    height: 150px;
+    resize: vertical;
+}
+
+#emergency-btn {
+    padding: 15px 30px;
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    margin: 20px auto;
+    display: block;
+}
+
+#emergency-btn.blinking {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+}
+
 @media (max-width: 768px) {
     .navbar { flex-direction: column; gap: 20px; padding: 20px; }
     .nav-links { flex-direction: column; gap: 20px; }
     .control-panel { top: 150px; left: 10px; }
     .main-content { grid-template-columns: 1fr; }
     .modal-content { width: 95%; margin: 20% auto; }
+    .sub-menu { width: 150px; }
 }
