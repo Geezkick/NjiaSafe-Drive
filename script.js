@@ -1,87 +1,93 @@
-// script.js
-const map = L.map('map').setView([51.505, -0.09], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-
+// Shared variables
 const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace with your API key
-const incidents = [];
-const markersLayer = L.layerGroup().addTo(map);
+let map, markersLayer;
+const incidents = JSON.parse(localStorage.getItem('incidents')) || [];
 
-// New Features:
-// 1. Location search
-// 2. Incident filtering
-// 3. Real-time notifications
-// 4. Interactive incident list
-// 5. Weather hazard auto-detection
+// Initialize map on home page
+if (document.getElementById('map')) {
+    map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+}
 
-// Form submission
-document.getElementById('incident-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const type = document.getElementById('incident-type').value;
-    const description = document.getElementById('description').value;
+// Page-specific logic
+document.addEventListener('DOMContentLoaded', () => {
+    const page = window.location.pathname.split('/').pop() || 'index.html';
 
-    try {
-        const position = await getCurrentPosition();
-        const incident = {
-            type,
-            description,
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            timestamp: new Date().toISOString()
-        };
-
-        incidents.push(incident);
-        addIncidentToMap(incident);
-        updateIncidentsList();
-        showNotification(`Reported: ${type}`);
-        e.target.reset();
-        fetchWeatherData(position.coords.latitude, position.coords.longitude);
-    } catch (error) {
-        showNotification('Error: Enable location services', true);
-        console.error(error);
+    if (page === 'index.html') {
+        initializeHome();
+    } else if (page === 'report.html') {
+        initializeReport();
+    } else if (page === 'dashboard.html') {
+        initializeDashboard();
     }
 });
 
-// Location search
-document.getElementById('search-btn').addEventListener('click', async () => {
-    const query = document.getElementById('location-search').value;
-    if (!query) return;
+// Home page logic
+function initializeHome() {
+    loadIncidentsOnMap();
+    updateSafetyStatus();
+    getCurrentPosition()
+        .then(position => {
+            map.setView([position.coords.latitude, position.coords.longitude], 13);
+            fetchWeatherData(position.coords.latitude, position.coords.longitude);
+        })
+        .catch(() => console.log('Using default location'));
+}
 
-    try {
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
-        );
-        const data = await response.json();
-        if (data.length > 0) {
-            const { lat, lon } = data[0];
-            map.setView([lat, lon], 13);
-            fetchWeatherData(lat, lon);
-            showNotification(`Moved to: ${query}`);
-        } else {
-            showNotification('Location not found', true);
+// Report page logic
+function initializeReport() {
+    document.getElementById('incident-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const type = document.getElementById('incident-type').value;
+        const description = document.getElementById('description').value;
+
+        try {
+            const position = await getCurrentPosition();
+            const incident = {
+                type,
+                description,
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                timestamp: new Date().toISOString()
+            };
+
+            incidents.push(incident);
+            saveIncidents();
+            showNotification(`Reported: ${type}`);
+            e.target.reset();
+            fetchWeatherData(position.coords.latitude, position.coords.longitude);
+        } catch (error) {
+            showNotification('Error: Enable location services', true);
         }
-    } catch (error) {
-        showNotification('Search error', true);
-        console.error(error);
-    }
-});
-
-// Filter incidents
-document.querySelectorAll('.filter').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        updateMapAndList();
     });
-});
+}
 
-// Get current position
+// Dashboard page logic
+function initializeDashboard() {
+    document.getElementById('search-btn').addEventListener('click', searchLocation);
+    document.querySelectorAll('.filter').forEach(cb => cb.addEventListener('change', updateIncidentsList));
+    updateIncidentsList();
+}
+
+// Helper functions
 function getCurrentPosition() {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject);
     });
 }
 
-// Add incident to map
+function saveIncidents() {
+    localStorage.setItem('incidents', JSON.stringify(incidents));
+}
+
+function loadIncidentsOnMap() {
+    markersLayer.clearLayers();
+    incidents.forEach(incident => addIncidentToMap(incident));
+}
+
 function addIncidentToMap(incident) {
     const marker = L.marker([incident.lat, incident.lng])
         .bindPopup(`
@@ -89,15 +95,15 @@ function addIncidentToMap(incident) {
             ${incident.description}<br>
             ${new Date(incident.timestamp).toLocaleString()}
         `);
-    marker.incidentType = incident.type; // Store type for filtering
+    marker.incidentType = incident.type;
     markersLayer.addLayer(marker);
 }
 
-// Update incidents list
 function updateIncidentsList() {
     const list = document.getElementById('incident-list');
-    const activeFilters = Array.from(document.querySelectorAll('.filter:checked')).map(cb => cb.value);
+    if (!list) return;
 
+    const activeFilters = Array.from(document.querySelectorAll('.filter:checked')).map(cb => cb.value);
     list.innerHTML = incidents
         .filter(incident => activeFilters.includes(incident.type))
         .map(incident => `
@@ -108,36 +114,15 @@ function updateIncidentsList() {
             </li>
         `).join('');
 
-    // Add click handlers to list items
     list.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => {
             const lat = li.dataset.lat;
             const lng = li.dataset.lng;
-            map.setView([lat, lng], 15);
-            markersLayer.eachLayer(marker => {
-                if (marker.getLatLng().lat == lat && marker.getLatLng().lng == lng) {
-                    marker.openPopup();
-                }
-            });
+            window.location.href = `index.html?lat=${lat}&lng=${lng}`;
         });
     });
 }
 
-// Update map based on filters
-function updateMapAndList() {
-    const activeFilters = Array.from(document.querySelectorAll('.filter:checked')).map(cb => cb.value);
-    markersLayer.eachLayer(marker => {
-        const shouldShow = activeFilters.includes(marker.incidentType);
-        if (shouldShow) {
-            if (!map.hasLayer(marker)) markersLayer.addLayer(marker);
-        } else {
-            markersLayer.removeLayer(marker);
-        }
-    });
-    updateIncidentsList();
-}
-
-// Fetch weather data
 async function fetchWeatherData(lat, lon) {
     try {
         const response = await fetch(
@@ -155,36 +140,71 @@ async function fetchWeatherData(lat, lon) {
                 timestamp: new Date().toISOString()
             };
             incidents.push(weatherIncident);
-            addIncidentToMap(weatherIncident);
-            updateMapAndList();
+            saveIncidents();
+            if (map) loadIncidentsOnMap();
+            updateSafetyStatus();
             showNotification('Weather hazard detected');
         }
     } catch (error) {
-        console.error('Error fetching weather:', error);
+        console.error('Weather fetch error:', error);
     }
 }
 
-// Show notification
+async function searchLocation() {
+    const query = document.getElementById('location-search').value;
+    if (!query) return;
+
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
+        );
+        const data = await response.json();
+        if (data.length > 0) {
+            const { lat, lon } = data[0];
+            window.location.href = `index.html?lat=${lat}&lng=${lon}`;
+        } else {
+            showNotification('Location not found', true);
+        }
+    } catch (error) {
+        showNotification('Search error', true);
+    }
+}
+
+function updateSafetyStatus() {
+    const status = document.getElementById('safety-status');
+    if (!status) return;
+
+    const recentHazards = incidents.filter(i => 
+        new Date(i.timestamp) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+    ).length;
+
+    if (recentHazards > 5) {
+        status.textContent = 'High Risk Area';
+        status.style.color = '#e74c3c';
+    } else if (recentHazards > 0) {
+        status.textContent = 'Moderate Risk';
+        status.style.color = '#f1c40f';
+    } else {
+        status.textContent = 'Safe Conditions';
+        status.style.color = '#27ae60';
+    }
+}
+
 function showNotification(message, isError = false) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.style.backgroundColor = isError ? '#e74c3c' : '#27ae60';
     notification.style.display = 'block';
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
+    setTimeout(() => notification.style.display = 'none', 3000);
 }
 
-// Initialize app
-function initializeApp() {
-    getCurrentPosition()
-        .then(position => {
-            map.setView([position.coords.latitude, position.coords.longitude], 13);
-            fetchWeatherData(position.coords.latitude, position.coords.longitude);
-        })
-        .catch(error => {
-            console.log('Using default location', error);
-        });
+// Handle URL parameters on home page
+if (window.location.search && map) {
+    const params = new URLSearchParams(window.location.search);
+    const lat = params.get('lat');
+    const lng = params.get('lng');
+    if (lat && lng) {
+        map.setView([lat, lng], 15);
+        fetchWeatherData(lat, lng);
+    }
 }
-
-initializeApp();

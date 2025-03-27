@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjiaSafe Drive - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <img src="assets/logo.png" alt="NjiaSafe Logo" class="logo-img">
+            <h1>NjiaSafe Drive</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="report.html">Report Incident</a></li>
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <h2>Safety Dashboard</h2>
+            <div class="search-bar">
+                <input type="text" id="location-search" placeholder="Search location...">
+                <button id="search-btn">Search</button>
+            </div>
+            <div class="filters">
+                <h3>Filter Incidents</h3>
+                <label><input type="checkbox" class="filter" value="pothole" checked> Potholes</label>
+                <label><input type="checkbox" class="filter" value="accident" checked> Accidents</label>
+                <label><input type="checkbox" class="filter" value="congestion" checked> Congestion</label>
+                <label><input type="checkbox" class="filter" value="weather" checked> Weather</label>
+            </div>
+            <div class="incidents-list">
+                <h3>Recent Reports</h3>
+                <ul id="incident-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <script src="script.js"></script>
+</body>
+</html>

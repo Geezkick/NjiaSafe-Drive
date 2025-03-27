@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjiaSafe Drive - Report</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <img src="assets/logo.png" alt="NjiaSafe Logo" class="logo-img">
+            <h1>NjiaSafe Drive</h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="report.html" class="active">Report Incident</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="report-page">
+            <h2>Report a Road Incident</h2>
+            <form id="incident-form" class="animated-form">
+                <select id="incident-type" required>
+                    <option value="">Select Incident Type</option>
+                    <option value="pothole">Pothole</option>
+                    <option value="accident">Accident</option>
+                    <option value="congestion">Traffic Congestion</option>
+                    <option value="weather">Weather Hazard</option>
+                </select>
+                <textarea id="description" placeholder="Describe the incident" required></textarea>
+                <button type="submit">Submit Report</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    <script src="script.js"></script>
+</body>
+</html>
