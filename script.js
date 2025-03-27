@@ -29,16 +29,35 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeHome() {
     const toggleBtn = document.getElementById('toggle-map-btn');
     const mapContainer = document.getElementById('map-container');
+    const safetyRulesBtn = document.getElementById('safety-rules-btn');
+    const modal = document.getElementById('safety-rules-modal');
+    const closeModal = document.querySelector('.close-modal');
     let isMapVisible = false;
 
+    // Map toggle
     toggleBtn.addEventListener('click', () => {
         isMapVisible = !isMapVisible;
         mapContainer.classList.toggle('visible', isMapVisible);
         toggleBtn.textContent = isMapVisible ? 'Hide Map' : 'Show Map';
         if (isMapVisible) {
-            map.invalidateSize(); // Ensure map renders correctly after showing
+            map.invalidateSize();
             loadIncidentsOnMap();
             updateSafetyStatus();
+        }
+    });
+
+    // Safety rules modal
+    safetyRulesBtn.addEventListener('click', () => {
+        modal.style.display = 'block';
+    });
+
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
         }
     });
 
