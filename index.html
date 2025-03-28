@@ -1,106 +1,63 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjiaSafe Drive - Home</title>
+    <title>SmartRoad Safety System</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="premium-overlay"></div>
-    <video autoplay muted loop id="traffic-video">
-        <source src="assets/traffic-video.mp4" type="video/mp4">
-    </video>
-
-    <div class="radial-menu" id="radial-menu">
-        <button class="menu-toggle" id="menu-toggle">☰</button>
-        <div class="menu-items" id="menu-items">
-            <button class="menu-btn" data-feature="map">Map</button>
-            <button class="menu-btn" data-feature="v2v">V2V</button>
-            <button class="menu-btn" data-feature="weather">Weather</button>
-            <button class="menu-btn" data-feature="navigation">Navigation</button>
-            <button class="menu-btn" data-feature="report">Report</button>
-            <button class="menu-btn" data-feature="dashboard">Dashboard</button>
-            <button class="menu-btn" data-feature="security">Security</button>
-            <button class="menu-btn" data-feature="first-aid">First Aid</button>
-            <button class="menu-btn" data-feature="hospitals">Hospitals</button>
-        </div>
-    </div>
-
     <div class="container">
-        <header>
-            <div class="logo">
-                <img src="assets/logo.png" alt="NjiaSafe Logo" class="logo-img">
-                <h1>NjiaSafe Drive</h1>
-            </div>
-            <div class="header-actions">
-                <button id="theme-toggle" class="action-btn">Dark Mode</button>
-                <button id="subscription-btn" class="action-btn">Subscription</button>
-                <button id="exit-btn" class="action-btn">Exit</button>
-            </div>
-        </header>
+        <div class="sidebar">
+            <h2>SmartRoad</h2>
+            <button id="sosBtn" class="sos-btn">SOS</button>
+            <button id="shortestRouteBtn">Shortest Route</button>
+            <button id="safestRouteBtn">Safest Route</button>
+            <button id="vehicleStatsBtn">Vehicle Stats</button>
+            <button id="subscribeBtn">Subscribe Now</button>
+        </div>
 
         <div class="main-content">
-            <div class="map-container" id="map-container">
-                <div id="map"></div>
-                <div class="safety-signal">
-                    <span id="safety-status">Assessing...</span>
+            <div class="dashboard">
+                <div class="map-container">
+                    <div id="map" class="map"></div>
+                    <div class="weather-overlay">
+                        <span id="weatherInfo"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="popup" id="feature-popup">
-                <div class="popup-content">
-                    <span class="popup-close" id="popup-close">×</span>
-                    <div id="popup-body"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+                <div class="control-panel">
+                    <div class="quick-actions">
+                        <button id="hospitalBtn" class="action-btn">Hospital</button>
+                        <button id="policeBtn" class="action-btn">Police</button>
+                        <button id="gasBtn" class="action-btn">Gas Station</button>
+                        <button id="shoppingBtn" class="action-btn">Shopping</button>
+                        <button id="garageBtn" class="action-btn">Garage</button>
+                        <button id="airportBtn" class="action-btn">Airport</button>
+                    </div>
 
-    <div class="modal" id="subscription-modal">
-        <div class="modal-content">
-            <span class="close-modal">×</span>
-            <h3>Subscription Plans</h3>
-            <div class="subscription-plans">
-                <div class="plan">
-                    <h4>Free</h4>
-                    <p>$0/month</p>
-                    <ul>
-                        <li>Basic Map Access</li>
-                        <li>V2V Messaging (5/day)</li>
-                        <li>Weather Updates</li>
-                    </ul>
-                    <button class="subscribe-btn" data-plan="free">Select</button>
-                </div>
-                <div class="plan">
-                    <h4>Pro</h4>
-                    <p>$9.99/month</p>
-                    <ul>
-                        <li>All Free Features</li>
-                        <li>Unlimited V2V Messaging</li>
-                        <li>Social Feed & Groups</li>
-                    </ul>
-                    <button class="subscribe-btn" data-plan="pro">Select</button>
-                </div>
-                <div class="plan">
-                    <h4>Premium</h4>
-                    <p>$19.99/month</p>
-                    <ul>
-                        <li>All Pro Features</li>
-                        <li>Navigation & Analytics</li>
-                        <li>First Aid & Hospitals</li>
-                    </ul>
-                    <button class="subscribe-btn" data-plan="premium">Select</button>
+                    <div class="vehicle-info">
+                        <h3>Vehicle Status</h3>
+                        <div id="speedMonitor">Speed: 0 mph</div>
+                        <div id="v2vStatus">V2V: Disconnected</div>
+                        <div id="trafficSignal">Traffic Light: N/A</div>
+                    </div>
+
+                    <div class="car-market">
+                        <h3>Safest Cars</h3>
+                        <input type="text" id="carSearch" placeholder="Search safest cars...">
+                        <div id="carResults"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="notification" id="notification"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
