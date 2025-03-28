@@ -1,30 +1,54 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartRoad Safety System</title>
+    <title>Smart Road System</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
-            <h2>SmartRoad</h2>
-            <button id="sosBtn" class="sos-btn">SOS</button>
+            <div class="logo-container">
+                <img src="https://via.placeholder.com/40" alt="Logo" class="logo">
+                <h2>SmartRoad</h2>
+            </div>
+            <button id="sosBtn" class="sos-btn">Emergency SOS</button>
             <button id="shortestRouteBtn">Shortest Route</button>
             <button id="safestRouteBtn">Safest Route</button>
+            <button id="subscribeBtn">Subscribe</button>
             <button id="vehicleStatsBtn">Vehicle Stats</button>
-            <button id="subscribeBtn">Subscribe Now</button>
+            <button id="useLocationBtn">Use My Location</button>
+            <button id="voiceControlBtn">Voice Control</button>
+            <button id="trafficToggleBtn">Traffic Info</button>
         </div>
 
         <div class="main-content">
             <div class="dashboard">
                 <div class="map-container">
-                    <div id="map" class="map"></div>
-                    <div class="weather-overlay">
-                        <span id="weatherInfo"></span>
+                    <div id="map"></div>
+                    <div class="weather-overlay" id="weatherInfo">
+                        <span>Loading weather...</span>
+                        <div id="weatherDetails">
+                            <p>Temperature: <span id="temp"></span></p>
+                            <p>Humidity: <span id="humidity"></span></p>
+                            <p>Conditions: <span id="conditions"></span></p>
+                            <p>Climate Trend: <span id="climateTrend"></span></p>
+                            <p id="weatherAlert" class="weather-alert"></p>
+                        </div>
+                    </div>
+                    <div class="dashboard-screen" id="dashboardScreen">
+                        <div class="dashboard-header">
+                            <h3 id="dashboardTitle">Notification</h3>
+                            <button id="closeDashboard">×</button>
+                        </div>
+                        <div id="dashboardContent">
+                            <input type="text" id="routeSearch" placeholder="Enter destination">
+                            <button id="searchRouteBtn">Search Route</button>
+                            <div id="routeInfo"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -40,24 +64,32 @@
 
                     <div class="vehicle-info">
                         <h3>Vehicle Status</h3>
-                        <div id="speedMonitor">Speed: 0 mph</div>
+                        <div id="speedMonitor">Speed: -- mph</div>
                         <div id="v2vStatus">V2V: Disconnected</div>
-                        <div id="trafficSignal">Traffic Light: N/A</div>
+                        <div id="fuelEfficiency">Fuel: -- mpg</div>
+                        <div class="traffic-signal">
+                            <span id="trafficSignal">Traffic Light:</span>
+                            <span id="trafficLightIndicator" class="traffic-light na"></span>
+                        </div>
                     </div>
 
-                    <div class="car-market">
-                        <h3>Safest Cars</h3>
+                    <div class="safest-cars">
+                        <h3>Shop Safest Cars</h3>
                         <input type="text" id="carSearch" placeholder="Search safest cars...">
                         <div id="carResults"></div>
+                    </div>
+
+                    <div class="fuel-prices">
+                        <h3>Nearby Fuel Prices</h3>
+                        <div id="fuelPriceResults"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap" async defer></script>
     <script src="script.js"></script>
 </body>
 </html>

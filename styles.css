@@ -1,4 +1,4 @@
-/* styles.css */
+/* styles.css - Updated with new features */
 * {
     margin: 0;
     padding: 0;
@@ -26,20 +26,21 @@ body {
     padding: 30px;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    animation: slideIn 0.5s ease;
 }
 
-@keyframes slideIn {
-    from { transform: translateX(-100%) scale(0.9); }
-    to { transform: translateX(0) scale(1); }
-}
-
-.sidebar h2 {
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     margin-bottom: 40px;
-    font-size: 28px;
-    text-align: center;
-    color: #00ddeb;
-    text-shadow: 0 0 10px rgba(0, 221, 235, 0.3);
+    justify-content: center;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 221, 235, 0.5);
 }
 
 .sidebar button {
@@ -48,12 +49,11 @@ body {
     margin: 12px 0;
     border: none;
     border-radius: 50px;
-    cursor: pointer;
     background: linear-gradient(45deg, #00ddeb, #007bff);
     color: white;
-    font-weight: 500;
+    cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    font-size: 16px;
 }
 
 .sidebar button:hover {
@@ -62,8 +62,13 @@ body {
 }
 
 .sos-btn {
-    background: linear-gradient(45deg, #ff3366, #ff5555) !important;
+    background: linear-gradient(45deg, #ff3366, #ff5555);
     animation: pulse 1.5s infinite;
+}
+
+.sos-btn.active {
+    background: #ff0000;
+    animation: none;
 }
 
 @keyframes pulse {
@@ -74,27 +79,31 @@ body {
 
 .main-content {
     flex: 1;
-    display: flex;
 }
 
 .dashboard {
-    flex: 1;
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 25px;
+    height: 100%;
 }
 
 .map-container {
+    position: relative;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #map {
     height: 100%;
-    min-height: 500px;
+    width: 100%;
+    transition: opacity 0.5s ease;
+}
+
+.map-container.fade #map {
+    opacity: 0.3;
 }
 
 .weather-overlay {
@@ -106,6 +115,90 @@ body {
     border-radius: 25px;
     font-size: 14px;
     backdrop-filter: blur(5px);
+    max-width: 300px;
+}
+
+.weather-alert {
+    color: #ff3366;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+#weatherDetails {
+    display: none;
+}
+
+#weatherDetails.active {
+    display: block;
+}
+
+.dashboard-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 15px;
+    color: #333;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 1000;
+    text-align: center;
+}
+
+.dashboard-screen.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#dashboardTitle {
+    font-size: 20px;
+    color: #007bff;
+}
+
+#closeDashboard {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+}
+
+#closeDashboard:hover {
+    color: #ff3366;
+}
+
+#routeSearch {
+    width: 70%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#searchRouteBtn {
+    padding: 10px 20px;
+    background: linear-gradient(45deg, #00ddeb, #007bff);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+#searchRouteBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
 .control-panel {
@@ -128,7 +221,7 @@ body {
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    font-size: 14px;
 }
 
 .action-btn:hover {
@@ -136,16 +229,34 @@ body {
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
 }
 
-.vehicle-info, .car-market {
+.vehicle-info, .safest-cars, .fuel-prices {
     background: rgba(255, 255, 255, 0.05);
     padding: 20px;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
 }
 
-.car-market .car-result {
+.vehicle-info h3, .safest-cars h3, .fuel-prices h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.vehicle-info div {
+    margin: 8px 0;
+}
+
+.traffic-light {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.traffic-light.green { background-color: #00ff00; }
+.traffic-light.red { background-color: #ff0000; }
+.traffic-light.na { background-color: #808080; }
+
+.car-result, .fuel-result {
     display: flex;
     align-items: center;
     margin: 10px 0;
@@ -153,17 +264,15 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
 }
 
-.car-result:hover {
+.car-result:hover, .fuel-result:hover {
     background: rgba(255, 255, 255, 0.2);
-    transform: translateX(5px);
 }
 
 .car-result img {
-    width: 60px;
-    height: 40px;
+    width: 100px;
+    height: 60px;
     object-fit: cover;
     margin-right: 15px;
     border-radius: 5px;
@@ -177,5 +286,21 @@ body {
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    outline: none;
+}
+
+.fuel-result span {
+    flex: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@media (max-width: 768px) {
+    .container { flex-direction: column; padding: 10px; }
+    .sidebar { width: 100%; padding: 20px; }
+    .dashboard { grid-template-columns: 1fr; }
+    .quick-actions { grid-template-columns: 1fr; }
+    .dashboard-screen { width: 90%; }
 }
