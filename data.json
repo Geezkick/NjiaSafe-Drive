@@ -1,0 +1,18 @@
+{
+    "nearbyVehicles": [
+        { "id": 1, "speed": 80, "location": { "lat": 37.7749, "lng": -122.4194 }, "speedLimit": 60 },
+        { "id": 2, "speed": 50, "location": { "lat": 37.7849, "lng": -122.4294 }, "speedLimit": 60 }
+    ],
+    "accidents": [
+        { "lat": 37.7649, "lng": -122.4094, "time": "5 mins ago" }
+    ],
+    "trafficJams": [
+        { "lat": 37.7549, "lng": -122.3994, "severity": "Moderate" }
+    ],
+    "roadConditions": [
+        { "lat": 37.7449, "lng": -122.3894, "type": "Pothole" }
+    ],
+    "ads": [
+        { "title": "2025 SafeDrive X", "image": "assets/ads/safety-car.jpg", "link": "#" }
+    ]
+}
