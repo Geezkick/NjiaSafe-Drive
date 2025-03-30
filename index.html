@@ -16,28 +16,30 @@
     <span>Real-Time Map App</span>
   </div>
   <div class="side-menu" id="sideMenu">
-    <div class="profile">
-      <h4><i class="fas fa-user"></i> Profile</h4>
-      <p id="profileName">Guest</p>
-      <p id="profileMode">Mode: DRIVING</p>
-    </div>
-    <button id="backBtn" class="side-btn"><i class="fas fa-arrow-left"></i> Back</button>
-    <button id="signInBtn" class="side-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-    <div class="mode-switch">
-      <h4>Travel Mode</h4>
-      <button id="modeDriving" class="mode-btn" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
-      <button id="modeWalking" class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
-      <button id="modeCycling" class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
-    </div>
-    <div class="smart-road">
-      <h4>Smart Road System</h4>
-      <button id="sosBtn" class="smart-btn"><i class="fas fa-sos"></i> SOS</button>
-      <button id="hospitalBtn" class="smart-btn"><i class="fas fa-hospital"></i> Hospital Pickup</button>
-      <button id="safetyBtn" class="smart-btn"><i class="fas fa-shield-alt"></i> Road Safety</button>
-      <button id="gasBtn" class="smart-btn"><i class="fas fa-gas-pump"></i> Nearest Gas</button>
-      <button id="mallBtn" class="smart-btn"><i class="fas fa-shopping-cart"></i> Nearest Mall</button>
-      <button id="garageBtn" class="smart-btn"><i class="fas fa-tools"></i> Nearest Garage</button>
-      <button id="parkingBtn" class="smart-btn"><i class="fas fa-parking"></i> Book Parking</button>
+    <div class="side-content">
+      <div class="profile">
+        <h4><i class="fas fa-user"></i> Profile</h4>
+        <p id="profileName">Guest</p>
+        <p id="profileMode">Mode: DRIVING</p>
+      </div>
+      <button id="backBtn" class="side-btn"><i class="fas fa-arrow-left"></i> Back</button>
+      <button id="signInBtn" class="side-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <div class="mode-switch">
+        <h4>Travel Mode</h4>
+        <button id="modeDriving" class="mode-btn" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
+        <button id="modeWalking" class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
+        <button id="modeCycling" class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
+      </div>
+      <div class="smart-road">
+        <h4>Smart Road System</h4>
+        <button id="sosBtn" class="smart-btn"><i class="fas fa-sos"></i> SOS</button>
+        <button id="hospitalBtn" class="smart-btn"><i class="fas fa-hospital"></i> Hospital Pickup</button>
+        <button id="safetyBtn" class="smart-btn"><i class="fas fa-shield-alt"></i> Road Safety</button>
+        <button id="gasBtn" class="smart-btn"><i class="fas fa-gas-pump"></i> Nearest Gas</button>
+        <button id="mallBtn" class="smart-btn"><i class="fas fa-shopping-cart"></i> Nearest Mall</button>
+        <button id="garageBtn" class="smart-btn"><i class="fas fa-tools"></i> Nearest Garage</button>
+        <button id="parkingBtn" class="smart-btn"><i class="fas fa-parking"></i> Book Parking</button>
+      </div>
     </div>
   </div>
   <div class="container">
@@ -48,7 +50,7 @@
       </div>
     </div>
     <div id="map"></div>
-    <div class="dashboard">
+    <div class="dashboard" id="dashboard">
       <div class="card weather-card">
         <h3><i class="fas fa-umbrella"></i> Weather</h3>
         <div id="weather">Loading...</div>
@@ -66,7 +68,7 @@
       <button id="fetchWeather" class="fab" title="Fetch Weather"><i class="fas fa-cloud-sun"></i></button>
     </div>
   </div>
-  <div id="safetyAlert"><div id="alertContent"></div></div>
+  <div id="alertOverlay" class="alert-overlay"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="script.js"></script>

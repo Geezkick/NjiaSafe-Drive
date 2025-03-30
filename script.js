@@ -5,6 +5,7 @@ let lastWeatherUpdate = 0;
 let travelMode = "DRIVING";
 let isSignedIn = false;
 let userProfile = { name: "Guest", preferredMode: "DRIVING" };
+let currentLocationName = "Nairobi";
 
 // Map Initialization
 function initMap() {
@@ -43,6 +44,7 @@ function startGeolocation() {
       updateFeedback(`Position updated: ${currentPosition.lat}, ${currentPosition.lng}`);
       fetchWeather();
       fetchTraffic();
+      updateLocationName();
     },
     error => {
       console.error("Geolocation error:", error);
@@ -52,7 +54,7 @@ function startGeolocation() {
   );
 }
 
-// Weather Fetching (Fixed)
+// Weather Fetching with Location and Date
 async function fetchWeather() {
   const weatherEl = document.getElementById("weather");
   if (!weatherEl) {
@@ -76,8 +78,11 @@ async function fetchWeather() {
     const precip = data.hourly.precipitation[0] || 0;
     const humidity = data.hourly.relativehumidity_2m[0] || 0;
     const pressure = data.hourly.pressure_msl[0] || 0;
+    const date = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     weatherEl.innerHTML = `
       <div class="weather-data">
+        <span><i class="fas fa-map-marker-alt"></i> Location: ${currentLocationName}</span>
+        <span><i class="fas fa-calendar-alt"></i> ${date}</span>
         <span><i class="wi ${getWeatherIcon(weathercode)} animate"></i> ${temperature}°C</span>
         <span><i class="fas fa-cloud"></i> ${getWeatherDescription(weathercode)}</span>
         <span><i class="fas fa-tint"></i> Precip: ${precip} mm</span>
@@ -87,7 +92,7 @@ async function fetchWeather() {
       </div>
     `;
     lastWeatherUpdate = now;
-    updateFeedback(`Weather updated: ${temperature}°C, ${getWeatherDescription(weathercode)}`);
+    updateFeedback(`Weather updated for ${currentLocationName}: ${temperature}°C`);
     checkWeatherAlerts(weathercode, precip, windspeed, humidity);
     console.log("Weather displayed:", { temperature, weathercode, windspeed, precip, humidity, pressure });
   } catch (error) {
@@ -95,6 +100,20 @@ async function fetchWeather() {
     weatherEl.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Weather unavailable";
     updateFeedback("Error fetching weather: " + error.message);
     displayAlert("Weather fetch failed");
+  }
+}
+
+async function updateLocationName() {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${currentPosition.lat}&lon=${currentPosition.lng}&format=json`);
+    if (!response.ok) throw new Error(`Reverse geocoding error ${response.status}`);
+    const data = await response.json();
+    currentLocationName = data.display_name.split(",")[0] || "Unknown Location";
+    console.log("Location name updated:", currentLocationName);
+    fetchWeather(); // Update weather with new location name
+  } catch (error) {
+    console.error("Location name fetch error:", error);
+    currentLocationName = "Unknown Location";
   }
 }
 
@@ -126,7 +145,7 @@ function checkWeatherAlerts(code, precip, windspeed, humidity) {
   }
 }
 
-// Traffic Fetching (Mock)
+// Traffic Fetching with Mode-Specific Data
 function fetchTraffic() {
   const trafficEl = document.getElementById("traffic");
   if (!trafficEl) {
@@ -135,15 +154,19 @@ function fetchTraffic() {
   }
   const trafficConditions = ["Light", "Moderate", "Heavy"];
   const condition = trafficConditions[Math.floor(Math.random() * 3)];
-  const speed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15;
+  const baseSpeed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15; // km/h
+  const speedAdjustment = condition === "Heavy" ? 0.6 : condition === "Moderate" ? 0.8 : 1;
+  const speed = Math.round(baseSpeed * speedAdjustment);
+  const travelTime = travelMode === "DRIVING" ? "10-15 min" : travelMode === "WALKING" ? "20-30 min" : "15-20 min"; // Mock travel time
   trafficEl.innerHTML = `
     <div class="traffic-data">
       <span><i class="fas fa-road"></i> Condition: ${condition}</span>
       <span><i class="fas fa-tachometer-alt"></i> Avg Speed: ${speed} km/h</span>
+      <span><i class="fas fa-clock"></i> Est. Travel Time: ${travelTime}</span>
     </div>
   `;
-  console.log("Traffic updated:", { condition, speed });
-  updateFeedback(`Traffic: ${condition}, ${speed} km/h`);
+  console.log("Traffic updated:", { condition, speed, travelTime });
+  updateFeedback(`Traffic: ${condition}, ${speed} km/h, ETA ${travelTime}`);
 }
 
 // Location Search
@@ -162,10 +185,11 @@ async function searchLocation() {
     if (data.length === 0) throw new Error("Location not found");
     const { lat, lon } = data[0];
     currentPosition = { lat: parseFloat(lat), lng: parseFloat(lon) };
+    currentLocationName = data[0].display_name.split(",")[0];
     userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
     map.setView([currentPosition.lat, currentPosition.lng], 14);
     console.log("Location found:", currentPosition);
-    updateFeedback(`Moved to: ${query}`);
+    updateFeedback(`Moved to: ${currentLocationName}`);
     fetchWeather();
     fetchTraffic();
   } catch (error) {
@@ -202,7 +226,8 @@ function setTravelMode(mode) {
   travelMode = mode;
   userProfile.preferredMode = mode;
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-  document.getElementById(`mode${mode}`).classList.add("active");
+  const selectedBtn = document.getElementById(`mode${mode}`);
+  selectedBtn.classList.add("active");
   updateProfile();
   updateFeedback(`Travel mode set to: ${mode}`);
   fetchTraffic();
@@ -219,14 +244,34 @@ async function findNearest(type) {
     const data = await response.json();
     if (data.length === 0) throw new Error(`${type} not found`);
     const { lat, lon, display_name } = data[0];
-    L.marker([lat, lon]).addTo(map).bindPopup(display_name).openPopup();
+    const distance = calculateDistance(currentPosition.lat, currentPosition.lng, parseFloat(lat), parseFloat(lon));
+    const eta = calculateETA(distance);
+    L.marker([lat, lon]).addTo(map).bindPopup(`${display_name} (${distance.toFixed(1)} km)`).openPopup();
     map.panTo([lat, lon]);
-    updateFeedback(`Nearest ${type}: ${display_name}`);
+    updateFeedback(`Nearest ${type}: ${display_name}, ${distance.toFixed(1)} km, ETA: ${eta} min`);
+    return { lat, lon, distance, eta };
   } catch (error) {
     console.error(`${type} search error:`, error);
     updateFeedback(`Error finding ${type}: ${error.message}`);
     displayAlert(`Failed to find ${type}`);
+    return null;
   }
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distance in km
+}
+
+function calculateETA(distance) {
+  const speed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15; // km/h
+  return Math.round((distance / speed) * 60); // Minutes
 }
 
 function callSOS() {
@@ -236,34 +281,42 @@ function callSOS() {
     return;
   }
   updateFeedback("SOS triggered - Emergency services contacted");
-  displayAlert("SOS: Emergency services dispatched to your location");
+  displayAlert(`SOS: Dispatched to ${currentLocationName} (${currentPosition.lat}, ${currentPosition.lng})`);
 }
 
-function requestHospitalPickup() {
+async function requestHospitalPickup() {
   if (!isSignedIn) {
     updateFeedback("Please sign in for hospital pickup");
     displayAlert("Sign in required");
     return;
   }
-  findNearest("hospital");
-  updateFeedback("Hospital pickup requested");
-  displayAlert("Hospital pickup dispatched");
+  const hospital = await findNearest("hospital");
+  if (hospital) {
+    updateFeedback(`Hospital pickup requested - ${hospital.distance.toFixed(1)} km, ETA: ${hospital.eta} min`);
+    displayAlert("Hospital pickup dispatched");
+  }
 }
 
 function checkRoadSafety() {
-  updateFeedback("Road safety: Check local conditions");
-  displayAlert("Road safety info: Stay alert, follow traffic rules");
+  const safetyTips = travelMode === "DRIVING" ? "Check tire pressure, obey speed limits" :
+                     travelMode === "WALKING" ? "Use crosswalks, stay visible" :
+                     "Wear helmet, use bike lanes";
+  updateFeedback(`Road safety: ${safetyTips}`);
+  displayAlert(`Road safety in ${currentLocationName}: ${safetyTips}`);
 }
 
-function bookParking() {
+async function bookParking() {
   if (!isSignedIn) {
     updateFeedback("Please sign in to book parking");
     displayAlert("Sign in required");
     return;
   }
   const vehicle = travelMode === "CYCLING" ? "bike" : "car";
-  updateFeedback(`Booking parking for ${vehicle} near ${currentPosition.lat}, ${currentPosition.lng}`);
-  displayAlert(`Parking booked for ${vehicle}`);
+  const distance = (Math.random() * 5 + 1).toFixed(1); // Mock distance
+  const eta = calculateETA(distance);
+  const parkingType = travelMode === "CYCLING" ? "Bike rack" : "Car parking";
+  updateFeedback(`Parking booked for ${vehicle} - ${parkingType}, ${distance} km away, ETA: ${eta} min`);
+  displayAlert(`Parking booked for ${vehicle} (${parkingType}) near ${currentLocationName}`);
 }
 
 // Feedback and Alerts
@@ -274,10 +327,26 @@ function updateFeedback(message) {
 }
 
 function displayAlert(message) {
-  const alert = document.getElementById("safetyAlert");
-  alert.querySelector("#alertContent").textContent = message;
-  alert.classList.add("active");
-  setTimeout(() => alert.classList.remove("active"), 5000);
+  const overlay = document.getElementById("alertOverlay");
+  overlay.innerHTML = `
+    <div class="alert-content">
+      <h3><i class="fas fa-exclamation-triangle"></i> Alert
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+      </h3>
+      <p>${message}</p>
+    </div>
+  `;
+  overlay.style.display = "flex";
+
+  const closeBtn = overlay.querySelector(".close-btn");
+  closeBtn.addEventListener("click", () => {
+    overlay.style.display = "none";
+    updateFeedback("Alert dismissed");
+  });
+
+  setTimeout(() => {
+    overlay.style.display = "none";
+  }, 5000); // Auto-dismiss after 5 seconds
 }
 
 // Event Listeners
