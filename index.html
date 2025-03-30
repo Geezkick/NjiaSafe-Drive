@@ -1,127 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartRoad Companion</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Map App</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/weather-icons@2.1.0/css/weather-icons.min.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
-    <div class="container mx-auto p-4 sm:p-6 md:p-8 flex-grow relative">
-        <!-- Menu Button -->
-        <div class="menu-btn fixed top-4 left-4 text-2xl sm:text-3xl cursor-pointer z-50 bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-gray-700 transition-all animate-pulse-short">☰</div>
-        
-        <!-- Sidebar -->
-        <nav class="sidebar fixed top-0 left-0 h-full bg-gray-900 bg-opacity-95 w-0 transition-all duration-300 shadow-2xl z-50 overflow-y-auto">
-            <div class="p-4">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-lg font-orbitron text-blue-400">Menu</span>
-                    <button class="btn bg-gray-600 hover:bg-gray-700 text-sm" onclick="closeSidebar()">Back</button>
-                </div>
-                <div id="profile-preview" class="hidden mb-4 bg-gray-800 p-3 rounded-lg shadow-inner">
-                    <p id="sidebar-name" class="text-lg font-bold text-blue-400"></p>
-                    <p id="sidebar-mode" class="text-sm text-gray-300"></p>
-                    <p id="sidebar-trips" class="text-sm text-gray-300">Trips: 0</p>
-                </div>
-                <ul class="text-base font-roboto">
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="showHome()">Home</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="showRoadStats()">Road Statistics</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="showProfile()">Profile</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="showSettings()">Settings</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="togglePedestrianMode()">Toggle Mode (Driver/Pedestrian/Cyclist)</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="toggleNightMode()">Night Mode</li>
-                    <li class="py-3 cursor-pointer hover:text-blue-400 transition-colors" onclick="fetchV2V()">V2V Data</li>
-                </ul>
-            </div>
-        </nav>
-
-        <!-- Top Bar -->
-        <div class="top-bar bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-4 mb-6 shadow-lg flex flex-col sm:flex-row justify-between items-center z-10">
-            <h1 class="text-2xl sm:text-3xl font-orbitron text-blue-400 animate-fade-in">SmartRoad Companion</h1>
-            <div class="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-0 text-sm sm:text-base font-roboto">
-                <span id="top-info" class="text-gray-300">Loading location...</span>
-                <span id="current-time" class="text-gray-300">Time: --:--</span>
-                <span id="speed-info" class="text-gray-300">Speed: 0 km/h</span>
-            </div>
-        </div>
-
-        <!-- Dashboard -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 z-10">
-            <div class="card futuristic-card">
-                <h3 class="futuristic-title">Weather</h3>
-                <div id="weather" class="futuristic-content animate-pulse">
-                    <p>Loading...</p>
-                </div>
-            </div>
-            <div class="card futuristic-card">
-                <h3 class="futuristic-title">Traffic</h3>
-                <div id="traffic" class="futuristic-content animate-pulse">
-                    <p>Loading...</p>
-                </div>
-            </div>
-            <div class="card futuristic-card">
-                <h3 class="futuristic-title cursor-pointer hover:text-blue-500 transition-colors" onclick="showAlertsPopup()">Alerts</h3>
-                <ul id="alerts" class="futuristic-content animate-pulse">
-                    <li>Loading...</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Route Planner -->
-        <div class="card mb-6 z-10">
-            <h3 class="text-lg sm:text-xl font-orbitron text-blue-400 mb-3">Route Planner</h3>
-            <div class="flex flex-col gap-3 mb-3">
-                <input id="from-input" type="text" placeholder="From (e.g., New York)" class="w-full p-2 text-sm rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner">
-                <input id="to-input" type="text" placeholder="To (e.g., Boston)" class="w-full p-2 text-sm rounded bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner">
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <button id="shortest-route-btn" class="btn bg-blue-600 hover:bg-blue-700 flex-1 min-w-[80px]">Shortest</button>
-                <button id="safest-route-btn" class="btn bg-green-600 hover:bg-green-700 flex-1 min-w-[80px]">Safest</button>
-            </div>
-        </div>
-
-        <!-- Map -->
-        <div class="card mb-6 z-5">
-            <h3 class="text-lg sm:text-xl font-orbitron text-blue-400 mb-3">Navigation Map</h3>
-            <div id="map" class="w-full h-96 rounded-xl shadow-lg"></div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6 z-10">
-            <button id="sos-btn" class="btn bg-red-600 hover:bg-red-700 floating-btn animate-float">SOS</button>
-            <button id="gas-btn" class="btn bg-yellow-600 hover:bg-yellow-700 floating-btn animate-float">Gas</button>
-            <button id="hospital-btn" class="btn bg-purple-600 hover:bg-purple-700 floating-btn animate-float">Hospital</button>
-            <button id="v2v-btn" class="btn bg-indigo-600 hover:bg-indigo-700 floating-btn animate-float">V2V</button>
-            <button id="garage-btn" class="btn bg-orange-600 hover:bg-orange-700 floating-btn animate-float">Garage</button>
-        </div>
-
-        <!-- Popups -->
-        <div id="feedback-popup" class="popup hidden z-20"><div class="popup-content futuristic-feedback animate-pop-in" id="feedback-content"></div></div>
-        <div id="home-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="home-content"></div></div>
-        <div id="road-stats-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="road-stats-content"></div></div>
-        <div id="profile-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="profile-content"></div></div>
-        <div id="settings-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="settings-content"></div></div>
-        <div id="mode-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="mode-content"></div></div>
-        <div id="night-mode-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="night-mode-content"></div></div>
-        <div id="v2v-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="v2v-content"></div></div>
-        <div id="sos-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="sos-content"></div></div>
-        <div id="gas-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="gas-content"></div></div>
-        <div id="hospital-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="hospital-content"></div></div>
-        <div id="garage-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="garage-content"></div></div>
-        <div id="route-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="route-content"></div></div>
-        <div id="alerts-popup" class="popup hidden z-20"><div class="popup-content futuristic-popup" id="alerts-content"></div></div>
-
-        <!-- Live Updates Popup -->
-        <div id="live-updates" class="fixed bottom-4 right-4 w-64 bg-gray-900 bg-opacity-90 rounded-lg p-3 shadow-2xl z-30 hidden futuristic-live">
-            <h4 class="text-sm font-orbitron text-blue-400 mb-2">Live Updates</h4>
-            <ul id="live-updates-list" class="text-xs font-roboto text-gray-300"></ul>
-        </div>
+<body>
+  <div class="header">
+    <button id="menuBtn" class="menu-btn"><i class="fas fa-bars"></i></button>
+    <img src="https://via.placeholder.com/40?text=Logo" alt="App Logo" class="logo">
+    <span>Real-Time Map App</span>
+  </div>
+  <div class="side-menu" id="sideMenu">
+    <button id="backBtn" class="side-btn"><i class="fas fa-arrow-left"></i> Back</button>
+    <button id="signInBtn" class="side-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+    <div class="mode-switch">
+      <h4>Travel Mode</h4>
+      <button id="modeDriving" class="mode-btn" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
+      <button id="modeWalking" class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
+      <button id="modeCycling" class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
     </div>
+    <div class="smart-road">
+      <h4>Smart Road System</h4>
+      <button id="sosBtn" class="smart-btn"><i class="fas fa-sos"></i> SOS</button>
+      <button id="hospitalBtn" class="smart-btn"><i class="fas fa-hospital"></i> Hospital Pickup</button>
+      <button id="safetyBtn" class="smart-btn"><i class="fas fa-shield-alt"></i> Road Safety</button>
+      <button id="gasBtn" class="smart-btn"><i class="fas fa-gas-pump"></i> Nearest Gas</button>
+      <button id="mallBtn" class="smart-btn"><i class="fas fa-shopping-cart"></i> Nearest Mall</button>
+      <button id="garageBtn" class="smart-btn"><i class="fas fa-tools"></i> Nearest Garage</button>
+      <button id="parkingBtn" class="smart-btn"><i class="fas fa-parking"></i> Book Parking</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="controls">
+      <div class="search-bar">
+        <input type="text" id="locationSearch" placeholder="Search location (e.g., Nairobi)">
+        <button id="searchBtn" class="btn"><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="dashboard">
+      <div class="card weather-card">
+        <h3><i class="fas fa-umbrella"></i> Weather</h3>
+        <div id="weather">Loading...</div>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-comment-alt"></i> Feedback</h3>
+        <div id="feedback">App starting...</div>
+      </div>
+    </div>
+    <div class="floating-buttons">
+      <button id="fetchWeather" class="fab" title="Fetch Weather"><i class="fas fa-cloud-sun"></i></button>
+    </div>
+  </div>
+  <div id="safetyAlert"><div id="alertContent"></div></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="script.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="script.js"></script>
 </body>
 </html>
