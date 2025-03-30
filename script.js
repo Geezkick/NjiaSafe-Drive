@@ -4,6 +4,7 @@ let currentPosition = { lat: -1.2921, lng: 36.8219 }; // Nairobi default
 let lastWeatherUpdate = 0;
 let travelMode = "DRIVING";
 let isSignedIn = false;
+let userProfile = { name: "Guest", preferredMode: "DRIVING" };
 
 // Map Initialization
 function initMap() {
@@ -18,6 +19,7 @@ function initMap() {
     console.log("Map initialized successfully");
     updateFeedback("Map loaded at Nairobi");
     startGeolocation();
+    fetchTraffic();
   } catch (error) {
     console.error("Map initialization error:", error);
     updateFeedback("Error: Map failed to load");
@@ -40,6 +42,7 @@ function startGeolocation() {
       console.log("Geolocation updated:", currentPosition);
       updateFeedback(`Position updated: ${currentPosition.lat}, ${currentPosition.lng}`);
       fetchWeather();
+      fetchTraffic();
     },
     error => {
       console.error("Geolocation error:", error);
@@ -49,7 +52,7 @@ function startGeolocation() {
   );
 }
 
-// Weather Fetching
+// Weather Fetching (Fixed)
 async function fetchWeather() {
   const weatherEl = document.getElementById("weather");
   if (!weatherEl) {
@@ -60,7 +63,7 @@ async function fetchWeather() {
   if (now - lastWeatherUpdate < 30000) return;
 
   weatherEl.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Fetching weather...";
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentPosition.lat}&longitude=${currentPosition.lng}¤t_weather=true&hourly=temperature_2m,precipitation,windspeed_10m,relativehumidity_2m,pressure_msl`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentPosition.lat}&longitude=${currentPosition.lng}&current_weather=true&hourly=temperature_2m,precipitation,windspeed_10m,relativehumidity_2m,pressure_msl`;
   console.log("Fetching weather from:", url);
 
   try {
@@ -123,6 +126,26 @@ function checkWeatherAlerts(code, precip, windspeed, humidity) {
   }
 }
 
+// Traffic Fetching (Mock)
+function fetchTraffic() {
+  const trafficEl = document.getElementById("traffic");
+  if (!trafficEl) {
+    console.error("Traffic element not found");
+    return;
+  }
+  const trafficConditions = ["Light", "Moderate", "Heavy"];
+  const condition = trafficConditions[Math.floor(Math.random() * 3)];
+  const speed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15;
+  trafficEl.innerHTML = `
+    <div class="traffic-data">
+      <span><i class="fas fa-road"></i> Condition: ${condition}</span>
+      <span><i class="fas fa-tachometer-alt"></i> Avg Speed: ${speed} km/h</span>
+    </div>
+  `;
+  console.log("Traffic updated:", { condition, speed });
+  updateFeedback(`Traffic: ${condition}, ${speed} km/h`);
+}
+
 // Location Search
 async function searchLocation() {
   const query = document.getElementById("locationSearch").value.trim();
@@ -144,6 +167,7 @@ async function searchLocation() {
     console.log("Location found:", currentPosition);
     updateFeedback(`Moved to: ${query}`);
     fetchWeather();
+    fetchTraffic();
   } catch (error) {
     console.error("Search error:", error);
     updateFeedback("Error: " + error.message);
@@ -163,15 +187,25 @@ function handleSignIn() {
   isSignedIn = !isSignedIn;
   const signInBtn = document.getElementById("signInBtn");
   signInBtn.innerHTML = isSignedIn ? "<i class='fas fa-sign-out-alt'></i> Sign Out" : "<i class='fas fa-sign-in-alt'></i> Sign In";
+  userProfile.name = isSignedIn ? "User" : "Guest";
+  updateProfile();
   updateFeedback(isSignedIn ? "Signed in" : "Signed out");
   if (!isSignedIn) toggleMenu();
 }
 
+function updateProfile() {
+  document.getElementById("profileName").textContent = userProfile.name;
+  document.getElementById("profileMode").textContent = `Mode: ${userProfile.preferredMode}`;
+}
+
 function setTravelMode(mode) {
   travelMode = mode;
+  userProfile.preferredMode = mode;
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
   document.getElementById(`mode${mode}`).classList.add("active");
+  updateProfile();
   updateFeedback(`Travel mode set to: ${mode}`);
+  fetchTraffic();
 }
 
 async function findNearest(type) {
@@ -280,5 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("parkingBtn").addEventListener("click", bookParking);
 
   document.getElementById("modeDriving").classList.add("active"); // Default
-  setInterval(fetchWeather, 30000); // Update every 30 seconds
+  updateProfile();
+  setInterval(fetchWeather, 30000); // Update weather every 30 seconds
+  setInterval(fetchTraffic, 60000); // Update traffic every 60 seconds
 });

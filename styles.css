@@ -85,6 +85,23 @@
     left: 0;
   }
   
+  .profile {
+    margin-bottom: 20px;
+  }
+  
+  .profile h4 {
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .profile p {
+    font-size: 1rem;
+    color: var(--text);
+  }
+  
   .side-btn, .mode-btn, .smart-btn {
     display: flex;
     align-items: center;
@@ -98,12 +115,12 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 1rem;
-    transition: transform 0.2s, background 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   
   .side-btn:hover, .mode-btn:hover, .smart-btn:hover {
-    transform: translateY(-2px);
-    background: var(--primary-dark);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
   
   .mode-btn.active {
@@ -213,13 +230,13 @@
     gap: 8px;
   }
   
-  .weather-card .weather-data {
+  .weather-card .weather-data, .traffic-card .traffic-data {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
   
-  .weather-card i {
+  .weather-card i, .traffic-card i {
     font-size: 1.8rem;
     margin-right: 8px;
     transition: transform 0.5s;
@@ -307,7 +324,7 @@
     .header {
       font-size: 1.5rem;
     }
-    .weather-card i {
+    .weather-card i, .traffic-card i {
       font-size: 1.5rem;
     }
     .fab {
