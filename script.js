@@ -1,5 +1,5 @@
 // Global Variables
-let map, userMarker, routeLayer;
+let map, userMarker, routeLayer, trafficLayer;
 let currentPosition = { lat: -1.2921, lng: 36.8219 }; // Nairobi default
 let lastWeatherUpdate = 0;
 let lastTrafficUpdate = 0;
@@ -7,14 +7,19 @@ let travelMode = "DRIVING";
 let isSignedIn = false;
 let userProfile = { name: "Guest", preferredMode: "DRIVING" };
 let currentLocationName = "Nairobi";
-let favorites = [];
+let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+let waypoints = [];
 let weatherCache = null;
 let trafficCache = null;
-let recentSearches = [];
+let recentSearches = JSON.parse(localStorage.getItem("recentSearches")) || [];
 const mapStyles = {
   default: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
   satellite: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+};
+const userPrefs = JSON.parse(localStorage.getItem("userPrefs")) || {
+  theme: "default",
+  units: "metric"
 };
 
 // Utility Functions
@@ -34,23 +39,32 @@ function debounce(func, wait) {
   };
 }
 
+function savePrefs() {
+  localStorage.setItem("userPrefs", JSON.stringify(userPrefs));
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+  localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+}
+
 // Map Initialization
 function initMap() {
   console.log("Initializing map...");
   showSpinner();
   try {
-    map = L.map("map", { zoomControl: false }).setView([currentPosition.lat, currentPosition.lng], 14);
-    L.tileLayer(mapStyles.default, {
+    map = L.map("map", { zoomControl: false, doubleClickZoom: false }).setView([currentPosition.lat, currentPosition.lng], 14);
+    L.tileLayer(mapStyles[userPrefs.theme === "dark" ? "dark" : "default"], {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
+      maxZoom: 19,
+      tileSize: 512,
+      zoomOffset: -1
     }).addTo(map);
     userMarker = L.marker([currentPosition.lat, currentPosition.lng], {
-      icon: L.divIcon({ className: "user-marker", html: '<i class="fas fa-location-dot fa-2x" style="color: var(--primary);"></i>' })
+      icon: L.divIcon({ className: "user-marker", html: '<i class="fas fa-location-dot fa-2x" style="color: var(--accent);"></i>' })
     }).addTo(map).bindPopup("You").openPopup();
-    console.log("Map initialized successfully");
+    console.log("Map initialized");
     updateFeedback("Map ready at Nairobi");
     startGeolocation();
     fetchTraffic();
+    initTrafficLayer();
   } catch (error) {
     console.error("Map initialization error:", error);
     updateFeedback("Error: Map failed to load");
@@ -72,7 +86,6 @@ function startGeolocation() {
       currentPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
       userMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
       map.panTo([currentPosition.lat, currentPosition.lng]);
-      console.log("Geolocation updated:", currentPosition);
       updateFeedback(`Location: ${currentPosition.lat}, ${currentPosition.lng}`);
       fetchWeather();
       fetchTraffic();
@@ -86,7 +99,7 @@ function startGeolocation() {
   );
 }
 
-// Weather Fetching
+// Weather Fetching with Forecast
 async function fetchWeather() {
   const weatherEl = document.getElementById("weather");
   if (!weatherEl) return;
@@ -98,33 +111,37 @@ async function fetchWeather() {
 
   showSpinner();
   weatherEl.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Updating...";
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentPosition.lat}&longitude=${currentPosition.lng}&current_weather=true&hourly=temperature_2m,precipitation,windspeed_10m,relativehumidity_2m,pressure_msl`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentPosition.lat}&longitude=${currentPosition.lng}¤t_weather=true&hourly=temperature_2m,precipitation,windspeed_10m,relativehumidity_2m&forecast_hours=3`;
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     const data = await response.json();
     const current = data.current_weather || {};
-    const temperature = current.temperature ?? "N/A";
-    const weathercode = current.weathercode ?? 0;
-    const windspeed = current.windspeed ?? "N/A";
     const hourly = data.hourly || {};
-    const precip = hourly.precipitation?.[0] ?? 0;
-    const humidity = hourly.relativehumidity_2m?.[0] ?? 0;
+    const temp = userPrefs.units === "metric" ? current.temperature : (current.temperature * 9/5 + 32);
+    const unit = userPrefs.units === "metric" ? "°C" : "°F";
+    const wind = userPrefs.units === "metric" ? current.windspeed : (current.windspeed * 0.621371);
+    const windUnit = userPrefs.units === "metric" ? "m/s" : "mph";
+
+    const forecast = hourly.temperature_2m.slice(0, 3).map((t, i) => {
+      const time = new Date().getHours() + i + 1;
+      return `<span>${time}:00: ${userPrefs.units === "metric" ? t : (t * 9/5 + 32)}${unit}</span>`;
+    }).join("");
 
     const html = `
       <div class="weather-data">
         <span><i class="fas fa-map-marker-alt"></i> ${currentLocationName}</span>
-        <span><i class="wi ${getWeatherIcon(weathercode)}"></i> ${temperature}°C - ${getWeatherDescription(weathercode)}</span>
-        <span><i class="fas fa-tint"></i> ${precip} mm</span>
-        <span><i class="fas fa-wind"></i> ${windspeed} m/s</span>
-        <span><i class="fas fa-water"></i> ${humidity}%</span>
+        <span><i class="wi ${getWeatherIcon(current.weathercode)}"></i> ${temp}${unit} - ${getWeatherDescription(current.weathercode)}</span>
+        <span><i class="fas fa-tint"></i> ${hourly.precipitation?.[0] ?? 0} mm</span>
+        <span><i class="fas fa-wind"></i> ${wind} ${windUnit}</span>
+        <span><i class="fas fa-water"></i> ${hourly.relativehumidity_2m?.[0] ?? 0}%</span>
+        <span><i class="fas fa-clock"></i> Forecast: ${forecast}</span>
       </div>
     `;
     weatherEl.innerHTML = html;
     weatherCache = html;
     lastWeatherUpdate = now;
-    updateFeedback(`Weather: ${temperature}°C in ${currentLocationName}`);
-    checkWeatherConditions(weathercode, precip, windspeed, humidity);
+    updateFeedback(`Weather: ${temp}${unit} in ${currentLocationName}`);
   } catch (error) {
     console.error("Weather fetch error:", error);
     weatherEl.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Unavailable";
@@ -140,7 +157,6 @@ async function updateLocationName() {
     if (!response.ok) throw new Error(`Reverse geocoding error ${response.status}`);
     const data = await response.json();
     currentLocationName = data.display_name.split(",")[0] || "Unknown";
-    console.log("Location name updated:", currentLocationName);
     fetchWeather();
   } catch (error) {
     console.error("Location name fetch error:", error);
@@ -158,15 +174,7 @@ function getWeatherDescription(code) {
   return desc[code] || "Overcast";
 }
 
-function checkWeatherConditions(code, precip, windspeed, humidity) {
-  let message = "";
-  if (code === 65 || precip > 5) message = "Heavy rain alert!";
-  else if (windspeed > 15) message = "Strong winds!";
-  else if (code === 95) message = "Thunderstorm warning!";
-  if (message) updateFeedback(message);
-}
-
-// Traffic Fetching
+// Traffic Fetching with Layer
 function fetchTraffic() {
   const trafficEl = document.getElementById("traffic");
   if (!trafficEl) return;
@@ -184,15 +192,33 @@ function fetchTraffic() {
   const html = `
     <div class="traffic-data">
       <span><i class="fas fa-road"></i> ${condition}</span>
-      <span><i class="fas fa-tachometer-alt"></i> ${speed} km/h</span>
+      <span><i class="fas fa-tachometer-alt"></i> ${speed} ${userPrefs.units === "metric" ? "km/h" : "mph"}</span>
       <span><i class="fas fa-clock"></i> ${travelTime}</span>
     </div>
   `;
   trafficEl.innerHTML = html;
   trafficCache = html;
   lastTrafficUpdate = now;
-  updateFeedback(`Traffic: ${condition}, ${speed} km/h`);
+  updateFeedback(`Traffic: ${condition}, ${speed} ${userPrefs.units === "metric" ? "km/h" : "mph"}`);
+  updateTrafficLayer(condition);
   hideSpinner();
+}
+
+function initTrafficLayer() {
+  trafficLayer = L.layerGroup().addTo(map);
+}
+
+function updateTrafficLayer(condition) {
+  trafficLayer.clearLayers();
+  if (document.getElementById("trafficBtn").classList.contains("active")) {
+    const color = condition === "Light" ? "#00ff00" : condition === "Moderate" ? "#ffa500" : "#ff0000";
+    const bounds = map.getBounds();
+    const points = [
+      [bounds.getSouthWest().lat, bounds.getSouthWest().lng],
+      [bounds.getNorthEast().lat, bounds.getNorthEast().lng]
+    ];
+    L.polyline(points, { color, weight: 4, opacity: 0.6 }).addTo(trafficLayer);
+  }
 }
 
 // Location Search
@@ -224,10 +250,10 @@ async function searchLocation(query = document.getElementById("locationSearch").
   }
 }
 
-// Voice Search
+// Voice Assistant
 function startVoiceSearch() {
   if (!("webkitSpeechRecognition" in window)) {
-    updateFeedback("Voice search not supported");
+    updateFeedback("Voice commands not supported");
     return;
   }
   const recognition = new webkitSpeechRecognition();
@@ -238,14 +264,25 @@ function startVoiceSearch() {
   updateFeedback("Listening...");
 
   recognition.onresult = event => {
-    const query = event.results[0][0].transcript;
-    document.getElementById("locationSearch").value = query;
-    searchLocation(query);
-    updateFeedback(`Voice search: ${query}`);
+    const command = event.results[0][0].transcript.toLowerCase();
+    if (command.includes("search")) {
+      const query = command.replace("search", "").trim();
+      document.getElementById("locationSearch").value = query;
+      searchLocation(query);
+    } else if (command.includes("traffic")) {
+      fetchTraffic();
+      document.getElementById("trafficBtn").classList.add("active");
+    } else if (command.includes("weather")) {
+      fetchWeather();
+    } else if (command.includes("route")) {
+      calculateRoute();
+    } else {
+      updateFeedback("Command not recognized");
+    }
   };
   recognition.onerror = error => {
-    console.error("Voice search error:", error);
-    updateFeedback("Voice search failed");
+    console.error("Voice error:", error);
+    updateFeedback("Voice command failed");
   };
 }
 
@@ -273,49 +310,58 @@ function addRecentSearch(query) {
   if (!recentSearches.includes(query)) {
     recentSearches.unshift(query);
     if (recentSearches.length > 10) recentSearches.pop();
+    savePrefs();
   }
 }
 
-// Route Calculation
+// Multi-Stop Route Calculation
 async function calculateRoute() {
   const destination = document.getElementById("locationSearch").value.trim();
-  if (!destination) {
-    updateFeedback("Enter a destination");
+  if (!destination && waypoints.length === 0) {
+    updateFeedback("Enter a destination or add waypoints");
     return;
   }
 
   showSpinner();
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`);
-    if (!response.ok) throw new Error(`Route error ${response.status}`);
-    const data = await response.json();
-    if (!data.length) throw new Error("Destination not found");
-    const destPos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    const destName = data[0].display_name.split(",")[0];
+    const stops = [...waypoints];
+    if (destination) {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`);
+      if (!response.ok) throw new Error(`Route error ${response.status}`);
+      const data = await response.json();
+      if (!data.length) throw new Error("Destination not found");
+      stops.push({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name.split(",")[0] });
+    }
 
-    const distance = calculateDistance(currentPosition.lat, currentPosition.lng, destPos.lat, destPos.lng);
-    const eta = calculateETA(distance);
-    const safetyScore = Math.random() * 100;
-    const waypoints = generateWaypoints(currentPosition, destPos);
+    if (stops.length === 0) throw new Error("No stops defined");
+    const allPoints = [{ lat: currentPosition.lat, lng: currentPosition.lng }, ...stops];
+    let totalDistance = 0;
+    let routePoints = [];
+
+    for (let i = 0; i < allPoints.length - 1; i++) {
+      const segment = generateWaypoints(allPoints[i], allPoints[i + 1]);
+      routePoints = routePoints.concat(segment);
+      totalDistance += calculateDistance(allPoints[i].lat, allPoints[i].lng, allPoints[i + 1].lat, allPoints[i + 1].lng);
+    }
 
     if (routeLayer) map.removeLayer(routeLayer);
-    routeLayer = L.polyline(waypoints, {
+    routeLayer = L.polyline(routePoints, {
       color: travelMode === "DRIVING" ? "#00b4d8" : travelMode === "WALKING" ? "#90e0ef" : "#ff006e",
-      weight: 5,
+      weight: 6,
       opacity: 0.9
-    }).addTo(map).bindPopup(`To ${destName}: ${distance.toFixed(1)} km, ${eta} min`).openPopup();
+    }).addTo(map).bindPopup(`Total: ${totalDistance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"}, ETA: ${calculateETA(totalDistance)} min`).openPopup();
     map.fitBounds(routeLayer.getBounds());
 
     document.getElementById("routeInfo").innerHTML = `
       <div class="route-data">
-        <span><i class="fas fa-map-signs"></i> ${destName}</span>
-        <span><i class="fas fa-ruler"></i> ${distance.toFixed(1)} km</span>
-        <span><i class="fas fa-clock"></i> ${eta} min</span>
-        <span><i class="fas fa-shield-alt"></i> ${safetyScore.toFixed(0)}%</span>
+        <span><i class="fas fa-map-signs"></i> ${stops[stops.length - 1].name}</span>
+        <span><i class="fas fa-ruler"></i> ${totalDistance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"}</span>
+        <span><i class="fas fa-clock"></i> ${calculateETA(totalDistance)} min</span>
+        <span><i class="fas fa-shield-alt"></i> ${(Math.random() * 100).toFixed(0)}%</span>
       </div>
     `;
-    updateFeedback(`Route to ${destName}: ${distance.toFixed(1)} km`);
-    updateRealTimeETA(distance);
+    updateFeedback(`Route: ${totalDistance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"}`);
+    updateRealTimeETA(totalDistance);
   } catch (error) {
     console.error("Route calculation error:", error);
     updateFeedback(`Route error: ${error.message}`);
@@ -349,6 +395,39 @@ function updateRealTimeETA(distance) {
   }, 1000);
 }
 
+function updateWaypoints() {
+  const list = document.getElementById("waypointList");
+  list.innerHTML = waypoints.map((w, i) => `<li data-index="${i}">${w.name} <button class="remove-btn"><i class="fas fa-trash"></i></button></li>`).join("");
+  document.getElementById("waypoints").classList.toggle("active", waypoints.length > 0);
+  list.querySelectorAll(".remove-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const index = parseInt(btn.parentElement.dataset.index);
+      waypoints.splice(index, 1);
+      updateWaypoints();
+      if (routeLayer) calculateRoute();
+    });
+  });
+}
+
+async function addWaypoint() {
+  const query = document.getElementById("locationSearch").value.trim();
+  if (!query) {
+    updateFeedback("Enter a stop to add");
+    return;
+  }
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+    if (!response.ok) throw new Error(`Waypoint error ${response.status}`);
+    const data = await response.json();
+    if (!data.length) throw new Error("Location not found");
+    waypoints.push({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), name: data[0].display_name.split(",")[0] });
+    updateWaypoints();
+    updateFeedback(`Added stop: ${data[0].display_name.split(",")[0]}`);
+  } catch (error) {
+    updateFeedback(`Waypoint error: ${error.message}`);
+  }
+}
+
 // Side Menu Features
 function toggleMenu() {
   const menu = document.getElementById("sideMenu");
@@ -375,8 +454,7 @@ function setTravelMode(mode) {
   travelMode = mode;
   userProfile.preferredMode = mode;
   document.querySelectorAll(".mode-btn").forEach(btn => btn.classList.remove("active"));
-  const selectedBtn = document.getElementById(`mode${mode}`);
-  if (selectedBtn) selectedBtn.classList.add("active");
+  document.getElementById(`mode${mode}`).classList.add("active");
   updateProfile();
   updateFeedback(`Mode: ${mode}`);
   fetchTraffic();
@@ -397,9 +475,9 @@ async function findNearest(type) {
     const eta = calculateETA(distance);
     L.marker([lat, lon], {
       icon: L.divIcon({ className: "poi-marker", html: `<i class="fas fa-${type === 'hospital' ? 'hospital' : type === 'gas' ? 'gas-pump' : 'map-pin'} fa-2x" style="color: var(--accent);"></i>` })
-    }).addTo(map).bindPopup(`${display_name} (${distance.toFixed(1)} km)`).openPopup();
+    }).addTo(map).bindPopup(`${display_name} (${distance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"})`).openPopup();
     map.panTo([lat, lon]);
-    updateFeedback(`Nearest ${type}: ${distance.toFixed(1)} km`);
+    updateFeedback(`Nearest ${type}: ${distance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"}`);
     return { lat, lon, distance, eta };
   } catch (error) {
     console.error(`${type} search error:`, error);
@@ -411,7 +489,7 @@ async function findNearest(type) {
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
+  const R = userPrefs.units === "metric" ? 6371 : 3958.8; // km or miles
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -419,7 +497,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 function calculateETA(distance) {
-  const speed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15;
+  const speed = travelMode === "DRIVING" ? (userPrefs.units === "metric" ? 50 : 31) : travelMode === "WALKING" ? (userPrefs.units === "metric" ? 5 : 3.1) : (userPrefs.units === "metric" ? 15 : 9.3);
   return Math.round((distance / speed) * 60);
 }
 
@@ -431,7 +509,7 @@ function callSOS() {
 async function requestHospitalPickup() {
   if (!isSignedIn) return updateFeedback("Sign in for hospital pickup");
   const hospital = await findNearest("hospital");
-  if (hospital) updateFeedback(`Hospital pickup: ${hospital.distance.toFixed(1)} km`);
+  if (hospital) updateFeedback(`Hospital pickup: ${hospital.distance.toFixed(1)} ${userPrefs.units === "metric" ? "km" : "mi"}`);
 }
 
 function checkRoadSafety() {
@@ -443,7 +521,7 @@ async function bookParking() {
   if (!isSignedIn) return updateFeedback("Sign in to book parking");
   const distance = (Math.random() * 5 + 1).toFixed(1);
   const eta = calculateETA(distance);
-  updateFeedback(`Parking booked: ${distance} km, ETA ${eta} min`);
+  updateFeedback(`Parking booked: ${distance} ${userPrefs.units === "metric" ? "km" : "mi"}, ETA ${eta} min`);
 }
 
 // Favorites
@@ -467,6 +545,7 @@ function addFavorite() {
   if (favorites.some(f => f.name === currentLocationName)) return updateFeedback(`${currentLocationName} already saved`);
   favorites.push({ name: currentLocationName, lat: currentPosition.lat, lng: currentPosition.lng });
   updateFavorites();
+  savePrefs();
   updateFeedback(`Saved ${currentLocationName}`);
 }
 
@@ -477,7 +556,7 @@ function updateFeedback(message) {
   console.log("Feedback:", message);
 }
 
-// Dark Mode Toggle
+// UI Enhancements
 function toggleDarkMode() {
   document.body.classList.toggle("dark");
   const btn = document.getElementById("darkModeBtn");
@@ -486,20 +565,65 @@ function toggleDarkMode() {
   updateFeedback(document.body.classList.contains("dark") ? "Dark theme on" : "Light theme on");
 }
 
-// Map Style Switch
 function updateMapStyle() {
   const style = document.getElementById("mapStyle").value;
   map.eachLayer(layer => {
-    if (layer instanceof L.TileLayer) map.removeLayer(layer);
+    if (layer instanceof L.TileLayer && !(layer instanceof L.LayerGroup)) map.removeLayer(layer);
   });
   L.tileLayer(mapStyles[style], {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
+    maxZoom: 19,
+    tileSize: 512,
+    zoomOffset: -1
   }).addTo(map);
+}
+
+function toggleTilt() {
+  const mapContainer = document.getElementById("map");
+  mapContainer.classList.toggle("tilted");
+  document.getElementById("tiltBtn").classList.toggle("active");
+}
+
+function toggleTraffic() {
+  document.getElementById("trafficBtn").classList.toggle("active");
+  fetchTraffic();
+}
+
+function toggleAR() {
+  const btn = document.getElementById("arBtn");
+  btn.classList.toggle("active");
+  updateFeedback(btn.classList.contains("active") ? "AR Mode: Simulated" : "AR Mode: Off");
+  // Placeholder for AR integration
+}
+
+function toggleCardCollapse(e) {
+  if (e.target.classList.contains("collapse-btn")) {
+    const card = e.target.closest(".card");
+    card.classList.toggle("collapsed");
+  }
+}
+
+function updateTheme() {
+  const theme = document.getElementById("themeSelect").value;
+  document.body.dataset.theme = theme;
+  userPrefs.theme = theme;
+  savePrefs();
+  updateMapStyle();
+}
+
+function updateUnits() {
+  userPrefs.units = document.getElementById("units").value;
+  savePrefs();
+  fetchWeather();
+  fetchTraffic();
+  if (routeLayer) calculateRoute();
 }
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+  document.body.dataset.theme = userPrefs.theme;
+  document.getElementById("themeSelect").value = userPrefs.theme;
+  document.getElementById("units").value = userPrefs.units;
   initMap();
   fetchWeather();
 
@@ -535,14 +659,24 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("routeBtn").addEventListener("click", calculateRoute);
   document.getElementById("darkModeBtn").addEventListener("click", toggleDarkMode);
   document.getElementById("addFavorite").addEventListener("click", addFavorite);
+  document.getElementById("addWaypoint").addEventListener("click", addWaypoint);
   document.getElementById("mapStyle").addEventListener("change", updateMapStyle);
+  document.getElementById("tiltBtn").addEventListener("click", toggleTilt);
+  document.getElementById("trafficBtn").addEventListener("click", toggleTraffic);
+  document.getElementById("arBtn").addEventListener("click", toggleAR);
+  document.getElementById("themeSelect").addEventListener("change", updateTheme);
+  document.getElementById("units").addEventListener("change", updateUnits);
+  document.getElementById("dashboard").addEventListener("click", toggleCardCollapse);
 
   document.getElementById("mobileMenu").addEventListener("click", toggleMenu);
   document.getElementById("mobileRoute").addEventListener("click", calculateRoute);
   document.getElementById("mobileWeather").addEventListener("click", fetchWeather);
+  document.getElementById("mobileVoice").addEventListener("click", startVoiceSearch);
 
   document.getElementById("modeDriving").classList.add("active");
   updateProfile();
+  updateFavorites();
+  updateWaypoints();
   setInterval(fetchWeather, 30000);
   setInterval(fetchTraffic, 60000);
 });
