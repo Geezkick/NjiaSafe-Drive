@@ -1,5 +1,5 @@
 // Global Variables
-let map, userMarker;
+let map, userMarker, routeLayer;
 let currentPosition = { lat: -1.2921, lng: 36.8219 }; // Nairobi default
 let lastWeatherUpdate = 0;
 let travelMode = "DRIVING";
@@ -93,13 +93,12 @@ async function fetchWeather() {
     `;
     lastWeatherUpdate = now;
     updateFeedback(`Weather updated for ${currentLocationName}: ${temperature}°C`);
-    checkWeatherAlerts(weathercode, precip, windspeed, humidity);
+    checkWeatherConditions(weathercode, precip, windspeed, humidity);
     console.log("Weather displayed:", { temperature, weathercode, windspeed, precip, humidity, pressure });
   } catch (error) {
     console.error("Weather fetch error:", error);
     weatherEl.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Weather unavailable";
     updateFeedback("Error fetching weather: " + error.message);
-    displayAlert("Weather fetch failed");
   }
 }
 
@@ -110,7 +109,7 @@ async function updateLocationName() {
     const data = await response.json();
     currentLocationName = data.display_name.split(",")[0] || "Unknown Location";
     console.log("Location name updated:", currentLocationName);
-    fetchWeather(); // Update weather with new location name
+    fetchWeather();
   } catch (error) {
     console.error("Location name fetch error:", error);
     currentLocationName = "Unknown Location";
@@ -133,16 +132,13 @@ function getWeatherDescription(code) {
   return desc[code] || "Unknown";
 }
 
-function checkWeatherAlerts(code, precip, windspeed, humidity) {
-  let alertMessage = "";
-  if (code === 65 || precip > 5) alertMessage = "Heavy rain warning!";
-  else if (windspeed > 15) alertMessage = "Strong wind warning!";
-  else if (code === 95) alertMessage = "Thunderstorm warning!";
-  else if (humidity > 90) alertMessage = "High humidity alert!";
-  if (alertMessage) {
-    displayAlert(alertMessage);
-    updateFeedback(`Alert: ${alertMessage}`);
-  }
+function checkWeatherConditions(code, precip, windspeed, humidity) {
+  let message = "";
+  if (code === 65 || precip > 5) message = "Heavy rain warning!";
+  else if (windspeed > 15) message = "Strong wind warning!";
+  else if (code === 95) message = "Thunderstorm warning!";
+  else if (humidity > 90) message = "High humidity alert!";
+  if (message) updateFeedback(`Weather condition: ${message}`);
 }
 
 // Traffic Fetching with Mode-Specific Data
@@ -157,7 +153,7 @@ function fetchTraffic() {
   const baseSpeed = travelMode === "DRIVING" ? 50 : travelMode === "WALKING" ? 5 : 15; // km/h
   const speedAdjustment = condition === "Heavy" ? 0.6 : condition === "Moderate" ? 0.8 : 1;
   const speed = Math.round(baseSpeed * speedAdjustment);
-  const travelTime = travelMode === "DRIVING" ? "10-15 min" : travelMode === "WALKING" ? "20-30 min" : "15-20 min"; // Mock travel time
+  const travelTime = travelMode === "DRIVING" ? "10-15 min" : travelMode === "WALKING" ? "20-30 min" : "15-20 min";
   trafficEl.innerHTML = `
     <div class="traffic-data">
       <span><i class="fas fa-road"></i> Condition: ${condition}</span>
@@ -195,7 +191,42 @@ async function searchLocation() {
   } catch (error) {
     console.error("Search error:", error);
     updateFeedback("Error: " + error.message);
-    displayAlert("Location search failed");
+  }
+}
+
+// Nearest & Safest Route Calculation
+async function calculateRoute() {
+  const destination = document.getElementById("locationSearch").value.trim();
+  if (!destination) {
+    updateFeedback("Error: Enter a destination in the search bar");
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destination)}&format=json&limit=1`);
+    if (!response.ok) throw new Error(`Route API error ${response.status}`);
+    const data = await response.json();
+    if (data.length === 0) throw new Error("Destination not found");
+    const destPos = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    const destName = data[0].display_name.split(",")[0];
+
+    const distance = calculateDistance(currentPosition.lat, currentPosition.lng, destPos.lat, destPos.lng);
+    const eta = calculateETA(distance);
+    const safetyScore = Math.random() * 100; // Mock safety score
+    const waypoints = [
+      [currentPosition.lat, currentPosition.lng],
+      [(currentPosition.lat + destPos.lat) / 2, (currentPosition.lng + destPos.lng) / 2],
+      [destPos.lat, destPos.lng]
+    ];
+
+    if (routeLayer) map.removeLayer(routeLayer);
+    routeLayer = L.polyline(waypoints, { color: travelMode === "DRIVING" ? "#007bff" : travelMode === "WALKING" ? "#28a745" : "#ff5722", weight: 4 }).addTo(map);
+    map.fitBounds(routeLayer.getBounds());
+
+    updateFeedback(`Route to ${destName}: ${distance.toFixed(1)} km, ETA: ${eta} min, Safety: ${safetyScore.toFixed(0)}%`);
+  } catch (error) {
+    console.error("Route calculation error:", error);
+    updateFeedback("Error calculating route: " + error.message);
   }
 }
 
@@ -231,6 +262,7 @@ function setTravelMode(mode) {
   updateProfile();
   updateFeedback(`Travel mode set to: ${mode}`);
   fetchTraffic();
+  if (routeLayer) calculateRoute();
 }
 
 async function findNearest(type) {
@@ -253,7 +285,6 @@ async function findNearest(type) {
   } catch (error) {
     console.error(`${type} search error:`, error);
     updateFeedback(`Error finding ${type}: ${error.message}`);
-    displayAlert(`Failed to find ${type}`);
     return null;
   }
 }
@@ -277,23 +308,19 @@ function calculateETA(distance) {
 function callSOS() {
   if (!isSignedIn) {
     updateFeedback("Please sign in to use SOS");
-    displayAlert("Sign in required for SOS");
     return;
   }
-  updateFeedback("SOS triggered - Emergency services contacted");
-  displayAlert(`SOS: Dispatched to ${currentLocationName} (${currentPosition.lat}, ${currentPosition.lng})`);
+  updateFeedback(`SOS triggered - Emergency services contacted at ${currentLocationName} (${currentPosition.lat}, ${currentPosition.lng})`);
 }
 
 async function requestHospitalPickup() {
   if (!isSignedIn) {
     updateFeedback("Please sign in for hospital pickup");
-    displayAlert("Sign in required");
     return;
   }
   const hospital = await findNearest("hospital");
   if (hospital) {
     updateFeedback(`Hospital pickup requested - ${hospital.distance.toFixed(1)} km, ETA: ${hospital.eta} min`);
-    displayAlert("Hospital pickup dispatched");
   }
 }
 
@@ -301,52 +328,35 @@ function checkRoadSafety() {
   const safetyTips = travelMode === "DRIVING" ? "Check tire pressure, obey speed limits" :
                      travelMode === "WALKING" ? "Use crosswalks, stay visible" :
                      "Wear helmet, use bike lanes";
-  updateFeedback(`Road safety: ${safetyTips}`);
-  displayAlert(`Road safety in ${currentLocationName}: ${safetyTips}`);
+  updateFeedback(`Road safety in ${currentLocationName}: ${safetyTips}`);
 }
 
 async function bookParking() {
   if (!isSignedIn) {
     updateFeedback("Please sign in to book parking");
-    displayAlert("Sign in required");
     return;
   }
   const vehicle = travelMode === "CYCLING" ? "bike" : "car";
-  const distance = (Math.random() * 5 + 1).toFixed(1); // Mock distance
+  const distance = (Math.random() * 5 + 1).toFixed(1);
   const eta = calculateETA(distance);
   const parkingType = travelMode === "CYCLING" ? "Bike rack" : "Car parking";
-  updateFeedback(`Parking booked for ${vehicle} - ${parkingType}, ${distance} km away, ETA: ${eta} min`);
-  displayAlert(`Parking booked for ${vehicle} (${parkingType}) near ${currentLocationName}`);
+  updateFeedback(`Parking booked for ${vehicle} - ${parkingType}, ${distance} km away, ETA: ${eta} min near ${currentLocationName}`);
 }
 
-// Feedback and Alerts
+// Feedback
 function updateFeedback(message) {
   const feedbackEl = document.getElementById("feedback");
   if (feedbackEl) feedbackEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
   console.log("Feedback:", message);
 }
 
-function displayAlert(message) {
-  const overlay = document.getElementById("alertOverlay");
-  overlay.innerHTML = `
-    <div class="alert-content">
-      <h3><i class="fas fa-exclamation-triangle"></i> Alert
-        <button class="close-btn"><i class="fas fa-times"></i></button>
-      </h3>
-      <p>${message}</p>
-    </div>
-  `;
-  overlay.style.display = "flex";
-
-  const closeBtn = overlay.querySelector(".close-btn");
-  closeBtn.addEventListener("click", () => {
-    overlay.style.display = "none";
-    updateFeedback("Alert dismissed");
-  });
-
-  setTimeout(() => {
-    overlay.style.display = "none";
-  }, 5000); // Auto-dismiss after 5 seconds
+// Dark Mode Toggle
+function toggleDarkMode() {
+  document.body.classList.toggle("dark");
+  const icon = document.getElementById("darkModeBtn").querySelector("i");
+  icon.classList.toggle("fa-moon");
+  icon.classList.toggle("fa-sun");
+  updateFeedback(document.body.classList.contains("dark") ? "Dark mode enabled" : "Light mode enabled");
 }
 
 // Event Listeners
@@ -381,6 +391,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("mallBtn").addEventListener("click", () => findNearest("mall"));
   document.getElementById("garageBtn").addEventListener("click", () => findNearest("garage"));
   document.getElementById("parkingBtn").addEventListener("click", bookParking);
+
+  document.getElementById("routeBtn").addEventListener("click", calculateRoute);
+  document.getElementById("darkModeBtn").addEventListener("click", toggleDarkMode);
 
   document.getElementById("modeDriving").classList.add("active"); // Default
   updateProfile();
