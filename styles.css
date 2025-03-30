@@ -8,6 +8,7 @@
     --shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     --highlight: #ffeb3b;
+    --danger: #dc3545;
   }
   
   body.dark {
@@ -148,13 +149,31 @@
     box-shadow: 0 0 10px var(--highlight);
   }
   
-  .mode-switch, .smart-road {
+  .mode-switch, .smart-road, .favorites {
     margin-top: 20px;
   }
   
-  .mode-switch h4, .smart-road h4 {
+  .mode-switch h4, .smart-road h4, .favorites h4 {
     color: var(--primary);
     margin-bottom: 10px;
+  }
+  
+  .favorites ul {
+    list-style: none;
+  }
+  
+  .favorites li {
+    padding: 8px;
+    background: var(--background);
+    margin: 5px 0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .favorites li:hover {
+    background: var(--primary);
+    color: #fff;
   }
   
   .container {
@@ -255,13 +274,13 @@
     gap: 8px;
   }
   
-  .weather-card .weather-data, .traffic-card .traffic-data {
+  .weather-card .weather-data, .traffic-card .traffic-data, .route-card .route-data {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
   
-  .weather-card i, .traffic-card i {
+  .weather-card i, .traffic-card i, .route-card i {
     font-size: 1.8rem;
     margin-right: 8px;
     transition: transform 0.5s;
@@ -300,11 +319,57 @@
     font-size: 1.5rem;
     box-shadow: var(--shadow);
     transition: transform 0.3s, background 0.3s;
+    position: relative;
   }
   
   .fab:hover {
     transform: scale(1.15);
     background: var(--primary-dark);
+  }
+  
+  .fab:focus {
+    outline: 2px solid var(--highlight);
+  }
+  
+  .fab::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  
+  .fab:hover::after {
+    display: block;
+  }
+  
+  .spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--primary);
+    border-top: 5px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none;
+    z-index: 2000;
+    transform: translate(-50%, -50%);
+  }
+  
+  .spinner.active {
+    display: block;
+  }
+  
+  @keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
   }
   
   @media (max-width: 768px) {
@@ -332,7 +397,7 @@
     .header {
       font-size: 1.5rem;
     }
-    .weather-card i, .traffic-card i {
+    .weather-card i, .traffic-card i, .route-card i {
       font-size: 1.5rem;
     }
     .fab {
