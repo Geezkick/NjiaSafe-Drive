@@ -3,135 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MapSphere X</title>
+  <title>Enhanced Map & Weather App</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/weather-icons@2.1.0/css/weather-icons.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-theme="default">
-  <div class="header">
-    <button id="menuBtn" class="menu-btn" aria-label="Open Menu"><i class="fas fa-bars"></i></button>
-    <div class="logo">
-      <svg viewBox="0 0 36 36" class="pulse"><path d="M18 2a16 16 0 1 0 0 32 16 16 0 0 0 0-32zm0 28a12 12 0 1 1 0-24 12 12 0 0 1 0 24z" fill="url(#gradient)"/><defs><linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#00b4d8"/><stop offset="100%" style="stop-color:#ff006e"/></linearGradient></defs></svg>
-    </div>
-    <span>MapSphere X</span>
-  </div>
-  <div class="side-menu" id="sideMenu">
-    <div class="side-content">
+<body>
+  <header>
+    <button id="menu-toggle" class="menu-btn"><i class="fas fa-bars"></i></button>
+    <h1>Map & Weather</h1>
+  </header>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-content">
+      <button id="back-btn" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
       <div class="profile">
-        <h4><i class="fas fa-user-astronaut"></i> Profile</h4>
-        <p id="profileName">Guest</p>
-        <p id="profileMode">Mode: DRIVING</p>
+        <h2><i class="fas fa-user"></i> Profile</h2>
+        <p id="user-name">Guest</p>
+        <button id="sign-in-btn" class="sign-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
       </div>
-      <button id="backBtn" class="side-btn"><i class="fas fa-arrow-left"></i> Back</button>
-      <button id="signInBtn" class="side-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-      <div class="mode-switch">
-        <h4>Travel Mode</h4>
-        <button id="modeDriving" class="mode-btn" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
-        <button id="modeWalking" class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
-        <button id="modeCycling" class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
+      <div class="travel-modes">
+        <h2><i class="fas fa-road"></i> Travel Mode</h2>
+        <button class="mode-btn active" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
+        <button class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
+        <button class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
       </div>
-      <div class="smart-road">
-        <h4>Smart Tools</h4>
-        <button id="sosBtn" class="smart-btn"><i class="fas fa-sos"></i> SOS</button>
-        <button id="hospitalBtn" class="smart-btn"><i class="fas fa-hospital"></i> Hospital</button>
-        <button id="safetyBtn" class="smart-btn"><i class="fas fa-shield-alt"></i> Safety</button>
-        <button id="gasBtn" class="smart-btn"><i class="fas fa-gas-pump"></i> Gas</button>
-        <button id="mallBtn" class="smart-btn"><i class="fas fa-shopping-cart"></i> Mall</button>
-        <button id="garageBtn" class="smart-btn"><i class="fas fa-tools"></i> Garage</button>
-        <button id="parkingBtn" class="smart-btn"><i class="fas fa-parking"></i> Parking</button>
-      </div>
-      <div class="favorites">
-        <h4>Favorites</h4>
-        <ul id="favoritesList"></ul>
-        <button id="addFavorite" class="side-btn"><i class="fas fa-star"></i> Add Location</button>
-      </div>
-      <div class="settings">
-        <h4>Settings</h4>
-        <label>Map Style:
-          <select id="mapStyle">
-            <option value="default">Default</option>
-            <option value="dark">Dark</option>
-            <option value="satellite">Satellite</option>
-          </select>
-        </label>
-        <label>Theme:
-          <select id="themeSelect">
-            <option value="default">Default</option>
-            <option value="neon">Neon</option>
-            <option value="midnight">Midnight</option>
-          </select>
-        </label>
-        <label>Units:
-          <select id="units">
-            <option value="metric">Metric</option>
-            <option value="imperial">Imperial</option>
-          </select>
-        </label>
+      <div class="route-options">
+        <h2><i class="fas fa-route"></i> Route Options</h2>
+        <input type="text" id="destination" placeholder="Enter destination">
+        <button id="route-btn" class="route-btn"><i class="fas fa-map-signs"></i> Find Route</button>
       </div>
     </div>
   </div>
-  <div class="container">
-    <div class="controls">
-      <div class="search-bar">
-        <input type="text" id="locationSearch" placeholder="Explore the world..." aria-label="Search Location">
-        <button id="voiceSearch" class="btn voice-btn" aria-label="Voice Search"><i class="fas fa-microphone"></i></button>
-        <button id="searchBtn" class="btn" aria-label="Search"><i class="fas fa-search"></i></button>
+  <main>
+    <section class="map-container">
+      <div id="map"></div>
+    </section>
+    <section class="dashboard">
+      <div class="weather-box">
+        <h2><i class="fas fa-cloud-sun"></i> Weather</h2>
+        <div id="weather-info">Loading weather...</div>
       </div>
-      <div id="suggestions" class="suggestions"></div>
-      <div id="waypoints" class="waypoints">
-        <h4>Route Stops</h4>
-        <ul id="waypointList"></ul>
-        <button id="addWaypoint" class="side-btn"><i class="fas fa-plus"></i> Add Stop</button>
+      <div class="feedback-box">
+        <h2><i class="fas fa-info-circle"></i> Status</h2>
+        <div id="feedback">Initializing...</div>
       </div>
-    </div>
-    <div id="map" class="map-container">
-      <div class="map-overlay">
-        <button id="tiltBtn" class="overlay-btn" title="Toggle 3D Tilt"><i class="fas fa-cube"></i></button>
-        <button id="trafficBtn" class="overlay-btn" title="Toggle Traffic"><i class="fas fa-road"></i></button>
-        <button id="arBtn" class="overlay-btn" title="AR Mode"><i class="fas fa-vr-cardboard"></i></button>
-      </div>
-    </div>
-    <div class="dashboard" id="dashboard">
-      <div class="card weather-card collapsible">
-        <h3><i class="fas fa-cloud-sun"></i> Weather <span class="collapse-btn"><i class="fas fa-chevron-down"></i></span></h3>
-        <div id="weather" class="card-content">Loading...</div>
-      </div>
-      <div class="card traffic-card collapsible">
-        <h3><i class="fas fa-traffic-light"></i> Traffic <span class="collapse-btn"><i class="fas fa-chevron-down"></i></span></h3>
-        <div id="traffic" class="card-content">Loading...</div>
-      </div>
-      <div class="card route-card collapsible">
-        <h3><i class="fas fa-route"></i> Route <span class="collapse-btn"><i class="fas fa-chevron-down"></i></span></h3>
-        <div id="routeInfo" class="card-content">No route selected</div>
-      </div>
-      <div class="card feedback-card collapsible">
-        <h3><i class="fas fa-comment-alt"></i> Status <span class="collapse-btn"><i class="fas fa-chevron-down"></i></span></h3>
-        <div id="feedback" class="card-content">Initializing...</div>
-      </div>
-    </div>
-    <div class="floating-buttons">
-      <button id="fetchWeather" class="fab" title="Refresh Weather"><i class="fas fa-sync"></i></button>
-      <button id="routeBtn" class="fab" title="Plan Route"><i class="fas fa-route"></i></button>
-      <button id="darkModeBtn" class="fab" title="Toggle Theme"><i class="fas fa-adjust"></i></button>
-    </div>
-  </div>
-  <div class="spinner" id="loadingSpinner"></div>
-  <nav class="mobile-nav">
-    <button id="mobileMenu" aria-label="Menu"><i class="fas fa-bars"></i></button>
-    <button id="mobileRoute" aria-label="Route"><i class="fas fa-route"></i></button>
-    <button id="mobileWeather" aria-label="Weather"><i class="fas fa-cloud-sun"></i></button>
-    <button id="mobileVoice" aria-label="Voice"><i class="fas fa-microphone"></i></button>
-  </nav>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="script.js" defer></script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").then(() => console.log("Service Worker registered"));
-    }
-  </script>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="script.js"></script>
 </body>
 </html>
