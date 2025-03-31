@@ -1,55 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enhanced Map & Weather App</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjiaSafe Drive</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-  <header>
-    <button id="menu-toggle" class="menu-btn"><i class="fas fa-bars"></i></button>
-    <h1>Map & Weather</h1>
-  </header>
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-content">
-      <button id="back-btn" class="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
-      <div class="profile">
-        <h2><i class="fas fa-user"></i> Profile</h2>
-        <p id="user-name">Guest</p>
-        <button id="sign-in-btn" class="sign-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-      </div>
-      <div class="travel-modes">
-        <h2><i class="fas fa-road"></i> Travel Mode</h2>
-        <button class="mode-btn active" data-mode="DRIVING"><i class="fas fa-car"></i> Driving</button>
-        <button class="mode-btn" data-mode="WALKING"><i class="fas fa-walking"></i> Walking</button>
-        <button class="mode-btn" data-mode="CYCLING"><i class="fas fa-bicycle"></i> Cycling</button>
-      </div>
-      <div class="route-options">
-        <h2><i class="fas fa-route"></i> Route Options</h2>
-        <input type="text" id="destination" placeholder="Enter destination">
-        <button id="route-btn" class="route-btn"><i class="fas fa-map-signs"></i> Find Route</button>
-      </div>
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h2>Login to NjiaSafe Drive</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn" onclick="login()" style="background: #2ecc71">Login</button>
+        </div>
     </div>
-  </div>
-  <main>
-    <section class="map-container">
-      <div id="map"></div>
-    </section>
-    <section class="dashboard">
-      <div class="weather-box">
-        <h2><i class="fas fa-cloud-sun"></i> Weather</h2>
-        <div id="weather-info">Loading weather...</div>
-      </div>
-      <div class="feedback-box">
-        <h2><i class="fas fa-info-circle"></i> Status</h2>
-        <div id="feedback">Initializing...</div>
-      </div>
-    </section>
-  </main>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="script.js"></script>
+
+    <div class="container" id="mainApp" style="display: none;">
+        <div class="sidebar" id="sidebar">
+            <div class="logo">NjiaSafe</div>
+            <ul>
+                <li onclick="showSection('dashboard')">Dashboard</li>
+                <li onclick="showSection('map')">Map</li>
+                <li onclick="showSection('routes')">Routes</li>
+                <li>
+                    <input type="text" id="startPoint" placeholder="Start Location">
+                    <input type="text" id="endPoint" placeholder="End Location">
+                    <button onclick="calculateRoutes()">Search Routes</button>
+                </li>
+                <li onclick="logout()">Logout</li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <button onclick="toggleSidebar()">☰</button>
+                <h1>NjiaSafe Drive</h1>
+                <div class="location-time">
+                    <span id="currentLocation">Loading...</span> | 
+                    <span id="currentTime">Loading...</span>
+                </div>
+            </div>
+
+            <div id="dashboard" class="section">
+                <div class="dashboard">
+                    <div class="card">
+                        <h3>Traffic Status</h3>
+                        <p id="trafficStatus">Moderate - 40 km/h average</p>
+                    </div>
+                    <div class="card">
+                        <h3>Active Users</h3>
+                        <p id="activeUsers">152 drivers, 45 cyclists</p>
+                    </div>
+                    <div class="card">
+                        <h3>Feedback</h3>
+                        <p id="feedback">Latest: Road clear ahead</p>
+                    </div>
+                </div>
+
+                <div class="weather-dashboard card">
+                    <h3>Weather Conditions</h3>
+                    <p id="weatherDisplay">Loading...</p>
+                    <p id="windSpeed">Wind: Loading...</p>
+                    <p id="precipitation">Precipitation: Loading...</p>
+                </div>
+
+                <div class="map-container" id="mapPlaceholder">
+                    <div id="map" style="height: 100%;"></div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn sos" onclick="sendSOS()">SOS</button>
+                    <button class="btn hospital" onclick="findNearest('hospital')">Hospital</button>
+                    <button class="btn garage" onclick="findNearest('garage')">Garage</button>
+                    <button class="btn mall" onclick="findNearest('mall')">Mall</button>
+                    <button class="btn police" onclick="findNearest('police')">Police</button>
+                </div>
+            </div>
+
+            <div id="routes" class="section" style="display: none;">
+                <h2>Available Routes</h2>
+                <div class="card" id="shortestRoute">
+                    <h3>Shortest Route</h3>
+                    <p>Loading...</p>
+                </div>
+                <div class="card" id="safestRoute">
+                    <h3>Safest Route</h3>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -2,215 +2,178 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f0f2f5;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f0f2f5;
     color: #333;
     line-height: 1.6;
+}
+
+.container {
     display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  
-  header {
-    background: linear-gradient(135deg, #007bff, #0056b3);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 250px;
+    background: #2c3e50;
     color: white;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 10;
-  }
-  
-  header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .menu-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
+    padding: 20px;
+    transition: width 0.3s;
+}
+
+.sidebar.hidden {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.sidebar .logo {
+    font-size: 24px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.sidebar .logo::before {
+    content: "🚗 ";
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 15px;
     cursor: pointer;
-    position: absolute;
-    left: 1rem;
-    transition: transform 0.2s;
-  }
-  
-  .menu-btn:hover {
-    transform: scale(1.1);
-  }
-  
-  .sidebar {
+}
+
+.sidebar ul li:hover {
+    background: #34495e;
+}
+
+.sidebar input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: none;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.location-time {
+    font-size: 14px;
+    color: #666;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.weather-dashboard {
+    grid-column: span 3;
+}
+
+.map-container {
+    height: 400px;
+    margin: 20px 0;
+    border-radius: 10px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+
+.sos { background: #e74c3c; }
+.hospital { background: #3498db; }
+.garage { background: #e67e22; }
+.mall { background: #9b59b6; }
+.police { background: #2ecc71; }
+
+.login-container {
     position: fixed;
     top: 0;
-    left: -300px;
-    width: 300px;
-    height: 100%;
-    background: white;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: left 0.3s ease;
-    z-index: 20;
-  }
-  
-  .sidebar.active {
     left: 0;
-  }
-  
-  .sidebar-content {
-    padding: 1.5rem;
-    height: 100%;
-    overflow-y: auto;
-  }
-  
-  .back-btn, .sign-btn, .mode-btn, .route-btn {
-    width: 100%;
-    padding: 0.75rem;
-    margin: 0.5rem 0;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: transform 0.2s, background 0.2s;
-  }
-  
-  .back-btn:hover, .sign-btn:hover, .mode-btn:hover, .route-btn:hover {
-    transform: translateY(-2px);
-    background: linear-gradient(135deg, #0056b3, #003d82);
-  }
-  
-  .mode-btn.active {
-    background: #28a745;
-  }
-  
-  .profile, .travel-modes, .route-options {
-    margin-bottom: 1.5rem;
-  }
-  
-  .profile h2, .travel-modes h2, .route-options h2 {
-    font-size: 1.2rem;
-    color: #007bff;
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  #user-name {
-    font-size: 1rem;
-    color: #333;
-  }
-  
-  #destination {
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-  
-  main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    transition: margin-left 0.3s ease;
-  }
-  
-  main.shifted {
-    margin-left: 300px;
-  }
-  
-  .map-container {
-    flex: 1;
-    min-height: 50vh;
-    max-height: 70vh;
-  }
-  
-  #map {
     width: 100%;
     height: 100%;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .dashboard {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-  
-  .weather-box, .feedback-box {
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
     background: white;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .weather-box h2, .feedback-box h2 {
-    font-size: 1.2rem;
-    color: #007bff;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  #weather-info, #feedback {
-    font-size: 1rem;
-  }
-  
-  /* Responsive Design */
-  @media (min-width: 768px) {
-    main {
-      flex-direction: row;
-      align-items: stretch;
-    }
-  
-    .map-container {
-      flex: 2;
-    }
-  
-    .dashboard {
-      flex: 1;
-      grid-template-columns: 1fr;
-    }
-  
-    header h1 {
-      font-size: 2rem;
-    }
-  }
-  
-  @media (max-width: 480px) {
+    padding: 40px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+@media (max-width: 768px) {
     .sidebar {
-      width: 250px;
+        position: absolute;
+        height: 100%;
+        z-index: 1000;
     }
-  
-    main.shifted {
-      margin-left: 250px;
+    
+    .dashboard {
+        grid-template-columns: 1fr;
     }
-  
-    .map-container {
-      min-height: 40vh;
+
+    .weather-dashboard {
+        grid-column: span 1;
     }
-  
-    header h1 {
-      font-size: 1.2rem;
-    }
-  
-    .weather-box h2, .feedback-box h2 {
-      font-size: 1rem;
-    }
-  }
+}
