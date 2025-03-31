@@ -38,7 +38,7 @@ body {
 }
 
 .sidebar .logo::before {
-    content: "🚗 ";
+    content: "";
 }
 
 .sidebar ul {
