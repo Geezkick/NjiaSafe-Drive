@@ -1,101 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NjiaSafe Drive</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta charset="UTF-8">
+  <title>NjiaSafe Drive - Nairobi</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
-    <div id="loginContainer" class="login-container">
-        <div class="login-box">
-            <h2>Login to NjiaSafe Drive</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button class="btn" onclick="login()" style="background: #2ecc71">Login</button>
-        </div>
-    </div>
+  <header>
+    <h1>NjiaSafe Drive</h1>
+    <p>Smart Road Safety for Nairobi</p>
+  </header>
+  <div class="controls">
+    <input type="text" id="start" placeholder="Start (e.g., CBD)">
+    <input type="text" id="end" placeholder="End (e.g., Westlands)">
+    <button id="navigate">Find Route</button>
+    <button id="sos">SOS</button>
+  </div>
+  <div id="weather">Nairobi Weather: Fetching...</div>
+  <div id="map"></div>
+  <ul id="road-list"></ul>
 
-    <div class="container" id="mainApp" style="display: none;">
-        <div class="sidebar" id="sidebar">
-            <div class="logo">NjiaSafe</div>
-            <ul>
-                <li onclick="showSection('dashboard')">Dashboard</li>
-                <li onclick="showSection('map')">Map</li>
-                <li onclick="showSection('routes')">Routes</li>
-                <li>
-                    <input type="text" id="startPoint" placeholder="Start Location">
-                    <input type="text" id="endPoint" placeholder="End Location">
-                    <button onclick="calculateRoutes()">Search Routes</button>
-                </li>
-                <li onclick="logout()">Logout</li>
-            </ul>
-        </div>
-
-        <div class="main-content">
-            <div class="header">
-                <button onclick="toggleSidebar()">☰</button>
-                <h1>NjiaSafe Drive</h1>
-                <div class="location-time">
-                    <span id="currentLocation">Loading...</span> | 
-                    <span id="currentTime">Loading...</span>
-                </div>
-            </div>
-
-            <div id="dashboard" class="section">
-                <div class="dashboard">
-                    <div class="card">
-                        <h3>Traffic Status</h3>
-                        <p id="trafficStatus">Moderate - 40 km/h average</p>
-                    </div>
-                    <div class="card">
-                        <h3>Active Users</h3>
-                        <p id="activeUsers">152 drivers, 45 cyclists</p>
-                    </div>
-                    <div class="card">
-                        <h3>Feedback</h3>
-                        <p id="feedback">Latest: Road clear ahead</p>
-                    </div>
-                </div>
-
-                <div class="weather-dashboard card">
-                    <h3>Weather Conditions</h3>
-                    <p id="weatherDisplay">Loading...</p>
-                    <p id="windSpeed">Wind: Loading...</p>
-                    <p id="precipitation">Precipitation: Loading...</p>
-                </div>
-
-                <div class="map-container" id="mapPlaceholder">
-                    <div id="map" style="height: 100%;"></div>
-                </div>
-
-                <div class="buttons">
-                    <button class="btn sos" onclick="sendSOS()">SOS</button>
-                    <button class="btn hospital" onclick="findNearest('hospital')">Hospital</button>
-                    <button class="btn garage" onclick="findNearest('garage')">Garage</button>
-                    <button class="btn mall" onclick="findNearest('mall')">Mall</button>
-                    <button class="btn police" onclick="findNearest('police')">Police</button>
-                </div>
-            </div>
-
-            <div id="routes" class="section" style="display: none;">
-                <h2>Available Routes</h2>
-                <div class="card" id="shortestRoute">
-                    <h3>Shortest Route</h3>
-                    <p>Loading...</p>
-                </div>
-                <div class="card" id="safestRoute">
-                    <h3>Safest Route</h3>
-                    <p>Loading...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="script.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,179 +1,97 @@
-* {
+body {
+    font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background: #f0f2f5;
+    background-color: #f4f4f4;
     color: #333;
-    line-height: 1.6;
-}
-
-.container {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.sidebar {
-    width: 250px;
-    background: #2c3e50;
+  }
+  
+  header {
+    background-color: #2c3e50;
     color: white;
-    padding: 20px;
-    transition: width 0.3s;
-}
-
-.sidebar.hidden {
-    width: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
-.sidebar .logo {
-    font-size: 24px;
-    margin-bottom: 30px;
+    padding: 10px;
     text-align: center;
-}
-
-.sidebar .logo::before {
-    content: "";
-}
-
-.sidebar ul {
-    list-style: none;
-}
-
-.sidebar ul li {
-    padding: 15px;
-    cursor: pointer;
-}
-
-.sidebar ul li:hover {
-    background: #34495e;
-}
-
-.sidebar input {
-    width: 100%;
-    padding: 8px;
+  }
+  
+  header h1 {
+    margin: 0;
+    font-size: 2em;
+  }
+  
+  header p {
     margin: 5px 0;
-    border-radius: 5px;
-    border: none;
-}
-
-.sidebar button {
-    width: 100%;
+  }
+  
+  .controls {
     padding: 10px;
-    margin: 10px 0;
-    background: #3498db;
+    text-align: center;
+  }
+  
+  .controls input {
+    padding: 8px;
+    margin: 5px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .controls button {
+    padding: 8px 16px;
+    margin: 5px;
+    background-color: #3498db;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-}
-
-.main-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.location-time {
-    font-size: 14px;
-    color: #666;
-}
-
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.weather-dashboard {
-    grid-column: span 3;
-}
-
-.map-container {
-    height: 400px;
-    margin: 20px 0;
-    border-radius: 10px;
-}
-
-.buttons {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    color: white;
-}
-
-.sos { background: #e74c3c; }
-.hospital { background: #3498db; }
-.garage { background: #e67e22; }
-.mall { background: #9b59b6; }
-.police { background: #2ecc71; }
-
-.login-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.login-box {
-    background: white;
-    padding: 40px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 400px;
-}
-
-.login-box input {
-    width: 100%;
+  }
+  
+  #sos {
+    background-color: #e74c3c;
+  }
+  
+  #sos:hover {
+    background-color: #c0392b;
+  }
+  
+  #navigate:hover {
+    background-color: #2980b9;
+  }
+  
+  #weather {
+    text-align: center;
     padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        position: absolute;
-        height: 100%;
-        z-index: 1000;
-    }
-    
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-
-    .weather-dashboard {
-        grid-column: span 1;
-    }
-}
+    background-color: #ecf0f1;
+    font-weight: bold;
+  }
+  
+  #weather::before {
+    margin-right: 5px;
+  }
+  
+  #map {
+    height: 500px;
+    width: 80%;
+    margin: 20px auto;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  #road-list {
+    list-style: none;
+    padding: 0;
+    width: 80%;
+    margin: 20px auto;
+  }
+  
+  #road-list li {
+    padding: 12px;
+    background-color: white;
+    margin: 5px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  #road-list li:hover {
+    background-color: #e0e0e0;
+  }
